@@ -12,8 +12,6 @@ jobs:
           fetch-depth: 2
 
       - name: Run Claude Code with Vault context
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           CHANGED=$(git diff HEAD~1 --name-only)
           PROMPT=$(cat <<'EOF'
