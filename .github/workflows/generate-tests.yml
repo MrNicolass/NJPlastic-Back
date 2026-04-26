@@ -16,9 +16,14 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           CHANGED=$(git diff HEAD~1 --name-only)
-          cd /home/xserver/nextcloud/data/XCloudServer/files/Projetos/NJPlastic/
-          claude-smart --print "Execute a test generation skill for the modified files.
+          PROMPT=$(cat <<'EOF'
+          Execute a test generation skill for the modified files.
           Save all test files inside the repository.
+          Modified files:
+          EOF
+          )
+          claude-smart --print "$PROMPT
+          $CHANGED"
         
       - name: Commit generated tests
         run: |
