@@ -21,4 +21,11 @@ class VersioningControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("1.0.0"));
     }
+
+    @Test
+    void getDescription_returns200WithDescriptionString() throws Exception {
+        mockMvc.perform(get("/api/v1/versioning/description"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("API to return data from plastic injectors production."));
+    }
 }
