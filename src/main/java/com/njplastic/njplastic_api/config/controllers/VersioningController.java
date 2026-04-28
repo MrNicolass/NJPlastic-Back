@@ -13,7 +13,7 @@ public class VersioningController {
       return "1.0.0";
   }
 
-  @GetMapping()
+  @GetMapping("/description")
   public String getDescripString() {
       return "API to return data from plastic injectors production.";
   }
