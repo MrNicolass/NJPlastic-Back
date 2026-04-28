@@ -22,7 +22,7 @@ jobs:
           Modified files:
           EOF
           )
-          claude-smart --print "$PROMPT
+          claude-smart --permission-mode bypassPermissions --print "$PROMPT
           $CHANGED"
 
       - name: Commit generated tests
