@@ -20,7 +20,7 @@ public class VersioningController {
 
   @GetMapping("/title")
   public String getTitle() {
-      return "Do title";
+      return "Do title yuppiee";
   }
   
 }
