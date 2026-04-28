@@ -22,7 +22,7 @@ jobs:
           Modified files:
           EOF
           )
-          claude-smart --permission-mode acceptEdits --print "$PROMPT
+          claude-smart --print "$PROMPT
           $CHANGED"
 
       - name: Commit generated tests
