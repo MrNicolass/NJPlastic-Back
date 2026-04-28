@@ -19,6 +19,7 @@ jobs:
           PROMPT=$(cat <<'EOF'
           Execute a test generation skill for the modified files.
           Save all test files inside the repository.
+          See `test-skill` on Vault.
           Modified files:
           EOF
           )
