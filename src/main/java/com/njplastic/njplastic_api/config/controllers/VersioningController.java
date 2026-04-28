@@ -17,5 +17,10 @@ public class VersioningController {
   public String getDescripString() {
       return "API to return data from plastic injectors production.";
   }
+
+  @GetMapping("/title")
+  public String getTitle() {
+      return "Do title";
+  }
   
 }
