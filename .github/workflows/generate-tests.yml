@@ -19,17 +19,12 @@ jobs:
           PROMPT=$(cat <<'EOF'
           Execute a test generation skill for the modified files.
           Save all test files inside the repository.
-          See `test-skill` on Vault.
+          Apply the `java-tests` skill from the Vault for each modified Java file.
           Modified files:
           EOF
           )
           claude-smart --permission-mode bypassPermissions --print "$PROMPT
           $CHANGED"
-          
-      - name: Debug - Check modified files      # ← adicionar temporariamente
-        run: |
-          git status
-          git diff --stat
 
       - name: Commit generated tests
         run: |
@@ -42,7 +37,6 @@ jobs:
           fi
 
           git add src/test/ 2>/dev/null || true
-          git add src/__tests__/ 2>/dev/null || true
 
           if git diff --staged --quiet; then
             echo "No test files to commit."
@@ -67,7 +61,7 @@ jobs:
 
           ${COMMIT_BODY}"
           
-                    git config user.name "Claude Code Agent"
-                    git config user.email "claude@njplastic.com"
-                    git commit -m "$COMMIT_MSG"
-                    git push
+          git config user.name "Claude Code Agent"
+          git config user.email "claude@njplastic.com"
+          git commit -m "$COMMIT_MSG"
+          git push
