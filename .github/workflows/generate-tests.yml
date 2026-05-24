@@ -28,9 +28,9 @@ jobs:
 
       - name: Commit generated tests
         run: |
-          # Extrai o código da issue do nome da branch (ex: feature/TAPIEMS-943-some-description → TAPIEMS-943)
+          # Extract the issue code from the branch name (e.g. feature/TAPIEMS-943-some-description → TAPIEMS-943)
           BRANCH_NAME="${GITHUB_REF_NAME}"
-          ISSUE_CODE=$(echo "$BRANCH_NAME" | grep -oE '[A-Z]+-[0-9]+' | head -1)
+          ISSUE_CODE=$(echo "$BRANCH_NAME" | grep -oE '[A-Z]+-[a-z0-9]+' | head -1)
 
           if [ -z "$ISSUE_CODE" ]; then
             ISSUE_CODE="NO-ISSUE"

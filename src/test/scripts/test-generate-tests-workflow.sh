@@ -26,13 +26,13 @@ assert_eq() {
 extract_issue_code() {
     local branch="$1"
     local code
-    code=$(echo "$branch" | grep -oE '[A-Z]+-[0-9]+' | head -1)
+    code=$(echo "$branch" | grep -oE '[A-Z]+-[a-z0-9]+' | head -1)
     echo "${code:-NO-ISSUE}"
 }
 
 echo "--- extract_issue_code ---"
 assert_eq "standard feature branch"       "TAPIEMS-943" "$(extract_issue_code "feature/TAPIEMS-943-some-description")"
-assert_eq "NJP prefix with extra suffix"  "NJP-868"     "$(extract_issue_code "feature/NJP-868jdc4jv-project-init")"
+assert_eq "NJP prefix with ClickUp alphanumeric suffix" "NJP-868jdc4jv" "$(extract_issue_code "feature/NJP-868jdc4jv-project-init")"
 assert_eq "hotfix branch"                 "ABC-123"     "$(extract_issue_code "hotfix/ABC-123-fix-something")"
 assert_eq "multi-token branch picks first" "FOO-1"      "$(extract_issue_code "feature/FOO-1-BAR-2-desc")"
 assert_eq "no issue code → NO-ISSUE"      "NO-ISSUE"    "$(extract_issue_code "feature/no-issue-here")"
