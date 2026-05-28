@@ -21,9 +21,9 @@ import jakarta.persistence.EntityManagerFactory;
 
 @Configuration
 @EnableJpaRepositories(basePackages = {
-    "com.njplastic.njplastic_api.auth.repository",
-    "com.njplastic.njplastic_api.audit.repository",
-    "com.njplastic.njplastic_api.production.repository"
+    "com.njplastic.njplastic_api.auth.repositories",
+    "com.njplastic.njplastic_api.audit.repositories",
+    "com.njplastic.njplastic_api.production.repositories"
 }, entityManagerFactoryRef = "postgresEntityManagerFactory", transactionManagerRef = "postgresTransactionManager")
 public class PostgresDataSourceConfig {
 
@@ -48,9 +48,9 @@ public class PostgresDataSourceConfig {
     return builder
         .dataSource(postgresDataSource)
         .packages(
-            "com.njplastic.njplastic_api.auth.domain",
-            "com.njplastic.njplastic_api.audit.domain",
-            "com.njplastic.njplastic_api.production.domain")
+            "com.njplastic.njplastic_api.auth.entities",
+            "com.njplastic.njplastic_api.audit.entities",
+            "com.njplastic.njplastic_api.production.entities")
         .persistenceUnit("postgres")
         .properties(properties)
         .build();
