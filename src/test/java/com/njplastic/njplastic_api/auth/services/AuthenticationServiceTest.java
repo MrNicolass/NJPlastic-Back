@@ -3,6 +3,7 @@ package com.njplastic.njplastic_api.auth.services;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -77,6 +78,15 @@ class AuthenticationServiceTest {
     assertThatThrownBy(() -> authenticationService.authenticate(request))
         .isInstanceOf(InvalidCredentialsException.class);
     verify(tokenProvider, never()).generate(any());
+  }
+
+  @Test
+  void authenticate_runsDummyHashComparisonWhenUserNotFound() {
+    when(userService.findActiveByLogin("manager")).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> authenticationService.authenticate(request))
+        .isInstanceOf(InvalidCredentialsException.class);
+    verify(passwordEncoder).matches(eq("manager-dev-123"), any(String.class));
   }
 
   @Test
