@@ -1,5 +1,7 @@
 package com.njplastic.njplastic_api.auth.services;
 
+import java.util.Optional;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,18 +24,31 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthenticationService {
 
+  private static final String DUMMY_HASH = "$2a$12$ehZuvVATxi/fCBcEXmCrEOWiw63ibDCmbzFFzFPs2VS2ci6Mjj7xO";
+
   private final UserService userService;
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider tokenProvider;
 
+  /**
+   * Authenticate a login request and issue a JWT. A BCrypt comparison is always
+   * performed - against the stored hash when the user exists, or against a fixed
+   * dummy hash otherwise - so missing/inactive logins take the same time as wrong
+   * passwords, preventing user enumeration via timing (RFC §3.2.1 / OWASP A07).
+   *
+   * @param request the login credentials
+   * @return the issued token and user summary
+   */
   public LoginResponse authenticate(LoginRequest request) {
-    User user = userService.findActiveByLogin(request.getLogin())
-        .orElseThrow(InvalidCredentialsException::new);
+    Optional<User> userOpt = userService.findActiveByLogin(request.getLogin());
+    String hash = userOpt.map(User::getPasswordHash).orElse(DUMMY_HASH);
+    boolean matches = passwordEncoder.matches(request.getPassword(), hash);
 
-    if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+    if (userOpt.isEmpty() || !matches) {
       throw new InvalidCredentialsException();
     }
 
+    User user = userOpt.get();
     String token = tokenProvider.generate(user);
     return LoginResponse.builder()
         .token(token)

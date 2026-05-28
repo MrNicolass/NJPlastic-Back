@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +21,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.njplastic.njplastic_api.common.dtos.ErrorResponseDTO;
+
+import tools.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
@@ -49,6 +55,12 @@ public class SecurityConfig {
       "/api/v1/versioning",
       "/api/v1/versioning/**"
   };
+
+  private final ObjectMapper objectMapper;
+
+  public SecurityConfig(ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
+  }
 
   @Bean
   PasswordEncoder passwordEncoder() {
@@ -80,8 +92,7 @@ public class SecurityConfig {
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .exceptionHandling(eh -> eh
             .authenticationEntryPoint(this::writeUnauthorized)
-            .accessDeniedHandler((req, res, ex) -> writeJson(res, HttpServletResponse.SC_FORBIDDEN,
-                "{\"error\":\"Acesso negado\"}")))
+            .accessDeniedHandler(this::writeForbidden))
         .headers(h -> h
             .contentTypeOptions(c -> {})
             .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true)));
@@ -106,16 +117,29 @@ public class SecurityConfig {
     return source;
   }
 
-  private void writeUnauthorized(jakarta.servlet.http.HttpServletRequest request,
+  private void writeUnauthorized(HttpServletRequest request,
       HttpServletResponse response,
       org.springframework.security.core.AuthenticationException ex) throws IOException {
-    writeJson(response, HttpServletResponse.SC_UNAUTHORIZED, "{\"error\":\"Credenciais inválidas\"}");
+    writeError(response, HttpServletResponse.SC_UNAUTHORIZED, "Credenciais inválidas",
+        ex.getClass().getSimpleName());
   }
 
-  private void writeJson(HttpServletResponse response, int status, String body) throws IOException {
+  private void writeForbidden(HttpServletRequest request,
+      HttpServletResponse response,
+      AccessDeniedException ex) throws IOException {
+    writeError(response, HttpServletResponse.SC_FORBIDDEN, "Acesso negado",
+        ex.getClass().getSimpleName());
+  }
+
+  private void writeError(HttpServletResponse response, int status, String message, String clazzError)
+      throws IOException {
+    ErrorResponseDTO body = ErrorResponseDTO.builder()
+        .message(message)
+        .clazzError(clazzError)
+        .build();
     response.setStatus(status);
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     response.setCharacterEncoding("UTF-8");
-    response.getWriter().write(body);
+    objectMapper.writeValue(response.getWriter(), body);
   }
 }
