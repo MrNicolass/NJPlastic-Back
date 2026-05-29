@@ -21,7 +21,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.njplastic.njplastic_api.audit.filters.AuditFilter;
+import com.njplastic.njplastic_api.audit.services.AuditService;
+import com.njplastic.njplastic_api.audit.services.PayloadSanitizer;
 import com.njplastic.njplastic_api.common.dtos.ErrorResponseDTO;
+import com.njplastic.njplastic_api.utils.ConstantsAndParams;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -34,27 +38,21 @@ import jakarta.servlet.http.HttpServletResponse;
  *
  * Authorization mapping inherited by downstream epics (RN01..RN04):
  * <ul>
- *   <li>RN01 (authenticated only) - covered globally by authenticated()</li>
- *   <li>RN02 (operator scope)     - @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')") + sector/shift filter in the service</li>
- *   <li>RN03 (leader scope)       - @PreAuthorize("hasAnyRole('LEADER','MANAGER')") + sector filter in the service</li>
- *   <li>RN04 (manager scope)      - @PreAuthorize("hasRole('MANAGER')") for writes/admin endpoints</li>
+ * <li>RN01 (authenticated only) - covered globally by authenticated()</li>
+ * <li>RN02 (operator scope)
+ * - @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')") + sector/shift
+ * filter in the service</li>
+ * <li>RN03 (leader scope) - @PreAuthorize("hasAnyRole('LEADER','MANAGER')") +
+ * sector filter in the service</li>
+ * <li>RN04 (manager scope) - @PreAuthorize("hasRole('MANAGER')") for
+ * writes/admin endpoints</li>
  * </ul>
  */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
-@EnableConfigurationProperties({ JwtProperties.class, CorsProperties.class })
+@EnableConfigurationProperties({ JwtProperties.class, CorsProperties.class, SecurityProperties.class })
 public class SecurityConfig {
-
-  private static final String[] PUBLIC_PATHS = {
-      "/auth/login",
-      "/swagger-ui.html",
-      "/swagger-ui/**",
-      "/v3/api-docs",
-      "/v3/api-docs/**",
-      "/api/v1/versioning",
-      "/api/v1/versioning/**"
-  };
 
   private final ObjectMapper objectMapper;
 
@@ -78,23 +76,32 @@ public class SecurityConfig {
   }
 
   @Bean
+  AuditFilter auditFilter(AuditService auditService, PayloadSanitizer payloadSanitizer) {
+    return new AuditFilter(auditService, payloadSanitizer);
+  }
+
+  @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http,
       JwtAuthenticationFilter jwtAuthenticationFilter,
-      CorsConfigurationSource corsConfigurationSource) throws Exception {
+      AuditFilter auditFilter,
+      CorsConfigurationSource corsConfigurationSource,
+      SecurityProperties securityProperties) throws Exception {
     http
         .csrf(csrf -> csrf.disable())
         .cors(cors -> cors.configurationSource(corsConfigurationSource))
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .requestMatchers(PUBLIC_PATHS).permitAll()
+            .requestMatchers(securityProperties.publicPaths().toArray(String[]::new)).permitAll()
             .anyRequest().authenticated())
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterAfter(auditFilter, JwtAuthenticationFilter.class)
         .exceptionHandling(eh -> eh
             .authenticationEntryPoint(this::writeUnauthorized)
             .accessDeniedHandler(this::writeForbidden))
         .headers(h -> h
-            .contentTypeOptions(c -> {})
+            .contentTypeOptions(c -> {
+            })
             .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true)));
     return http.build();
   }
@@ -120,14 +127,14 @@ public class SecurityConfig {
   private void writeUnauthorized(HttpServletRequest request,
       HttpServletResponse response,
       org.springframework.security.core.AuthenticationException ex) throws IOException {
-    writeError(response, HttpServletResponse.SC_UNAUTHORIZED, "Credenciais inválidas",
+    writeError(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid Credentials",
         ex.getClass().getSimpleName());
   }
 
   private void writeForbidden(HttpServletRequest request,
       HttpServletResponse response,
       AccessDeniedException ex) throws IOException {
-    writeError(response, HttpServletResponse.SC_FORBIDDEN, "Acesso negado",
+    writeError(response, HttpServletResponse.SC_FORBIDDEN, "Access Denied",
         ex.getClass().getSimpleName());
   }
 
@@ -139,7 +146,7 @@ public class SecurityConfig {
         .build();
     response.setStatus(status);
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-    response.setCharacterEncoding("UTF-8");
+    response.setCharacterEncoding(ConstantsAndParams.ENCODER_TEXT);
     objectMapper.writeValue(response.getWriter(), body);
   }
 }
