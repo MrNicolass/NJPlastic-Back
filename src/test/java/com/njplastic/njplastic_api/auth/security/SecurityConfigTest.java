@@ -107,7 +107,7 @@ class SecurityConfigTest {
     verify(response).setContentType("application/json");
     verify(response).setCharacterEncoding("UTF-8");
     ErrorResponseDTO body = captureWrittenBody();
-    assertThat(body.getMessage()).isEqualTo("Credenciais inválidas");
+    assertThat(body.getMessage()).isEqualTo("Invalid Credentials");
     assertThat(body.getClazzError()).isEqualTo("BadCredentialsException");
   }
 
@@ -125,7 +125,7 @@ class SecurityConfigTest {
     verify(response).setContentType("application/json");
     verify(response).setCharacterEncoding("UTF-8");
     ErrorResponseDTO body = captureWrittenBody();
-    assertThat(body.getMessage()).isEqualTo("Acesso negado");
+    assertThat(body.getMessage()).isEqualTo("Access Denied");
     assertThat(body.getClazzError()).isEqualTo("AccessDeniedException");
   }
 
