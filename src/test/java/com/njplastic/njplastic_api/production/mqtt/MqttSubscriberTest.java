@@ -66,13 +66,34 @@ class MqttSubscriberTest {
   }
 
   @Test
-  void ensureConnected_skipsWhenAlreadyConnected() throws MqttException {
+  void ensureConnected_skipsWhenAlreadyConnectedAndSubscribed() throws MqttException {
+    when(client.isConnected()).thenReturn(true);
+
+    subscriber.ensureConnected();
+    subscriber.ensureConnected();
+
+    verify(client, never()).connect(options);
+    verify(client, times(1)).subscribe(anyString(), anyInt());
+  }
+
+  @Test
+  void ensureConnected_subscribesWhenConnectedButNotSubscribed() throws MqttException {
     when(client.isConnected()).thenReturn(true);
 
     subscriber.ensureConnected();
 
     verify(client, never()).connect(options);
-    verify(client, never()).subscribe(anyString(), anyInt());
+    verify(client).subscribe("njplastic/pulso", 1);
+  }
+
+  @Test
+  void ensureConnected_connectsAndSubscribesWhenDisconnected() throws MqttException {
+    when(client.isConnected()).thenReturn(false);
+
+    subscriber.ensureConnected();
+
+    verify(client).connect(options);
+    verify(client).subscribe("njplastic/pulso", 1);
   }
 
   @Test
@@ -84,6 +105,44 @@ class MqttSubscriberTest {
 
     verify(client, times(1)).connect(options);
     verify(client, never()).subscribe(anyString(), anyInt());
+  }
+
+  @Test
+  void ensureConnected_disconnectsWhenSubscribeFails() throws MqttException {
+    when(client.isConnected()).thenReturn(true);
+    doThrow(new MqttException(MqttException.REASON_CODE_CLIENT_EXCEPTION))
+        .when(client).subscribe(anyString(), anyInt());
+
+    assertThatCode(() -> subscriber.ensureConnected()).doesNotThrowAnyException();
+
+    verify(client).subscribe("njplastic/pulso", 1);
+    verify(client).disconnect();
+  }
+
+  @Test
+  void ensureConnected_swallowsDisconnectFailureAfterSubscribeFailure() throws MqttException {
+    when(client.isConnected()).thenReturn(true);
+    doThrow(new MqttException(MqttException.REASON_CODE_CLIENT_EXCEPTION))
+        .when(client).subscribe(anyString(), anyInt());
+    doThrow(new MqttException(MqttException.REASON_CODE_CLIENT_EXCEPTION))
+        .when(client).disconnect();
+
+    assertThatCode(() -> subscriber.ensureConnected()).doesNotThrowAnyException();
+
+    verify(client).disconnect();
+  }
+
+  @Test
+  void ensureConnected_retriesSubscribeAfterPreviousFailure() throws MqttException {
+    when(client.isConnected()).thenReturn(true);
+    doThrow(new MqttException(MqttException.REASON_CODE_CLIENT_EXCEPTION))
+        .doNothing()
+        .when(client).subscribe(anyString(), anyInt());
+
+    subscriber.ensureConnected();
+    subscriber.ensureConnected();
+
+    verify(client, times(2)).subscribe("njplastic/pulso", 1);
   }
 
   @Test
@@ -112,5 +171,16 @@ class MqttSubscriberTest {
     doThrow(new MqttException(MqttException.REASON_CODE_CLIENT_EXCEPTION)).when(client).close();
 
     assertThatCode(() -> subscriber.stop()).doesNotThrowAnyException();
+  }
+
+  @Test
+  void stop_resetsSubscribedFlagAllowingResubscription() throws MqttException {
+    when(client.isConnected()).thenReturn(true);
+
+    subscriber.ensureConnected();
+    subscriber.stop();
+    subscriber.ensureConnected();
+
+    verify(client, times(2)).subscribe("njplastic/pulso", 1);
   }
 }
