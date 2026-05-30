@@ -33,6 +33,8 @@ public class MqttSubscriber {
   private final MqttProperties properties;
   private final MqttListener listener;
 
+  private volatile boolean subscribed = false;
+
   @PostConstruct
   void start() {
     client.setCallback(listener);
@@ -41,15 +43,29 @@ public class MqttSubscriber {
 
   @Scheduled(fixedDelay = RECONNECT_INTERVAL_MS)
   void ensureConnected() {
-    if (client.isConnected()) {
+    if (client.isConnected() && subscribed) {
       return;
     }
     try {
-      client.connect(options);
-      client.subscribe(properties.topic(), properties.qos());
-      LOGGER.info("MQTT subscribed to topic [{}] at [{}] with QoS {}",
-          properties.topic(), properties.brokerUrl(), properties.qos());
+      if (!client.isConnected()) {
+        client.connect(options);
+      }
+      if (!subscribed) {
+        client.subscribe(properties.topic(), properties.qos());
+        subscribed = true;
+        LOGGER.info("MQTT subscribed to topic [{}] at [{}] with QoS {}",
+            properties.topic(), properties.brokerUrl(), properties.qos());
+      }
     } catch (MqttException ex) {
+      subscribed = false;
+      if (client.isConnected()) {
+        try {
+          client.disconnect();
+        } catch (MqttException disconnectEx) {
+          LOGGER.warn("Error disconnecting MQTT client after subscribe failure: {}",
+              disconnectEx.getMessage());
+        }
+      }
       LOGGER.warn("MQTT broker unreachable at [{}]; will retry: {}",
           properties.brokerUrl(), ex.getMessage());
     }
@@ -64,6 +80,8 @@ public class MqttSubscriber {
       client.close();
     } catch (MqttException ex) {
       LOGGER.warn("Error closing MQTT client: {}", ex.getMessage());
+    } finally {
+      subscribed = false;
     }
   }
 }
