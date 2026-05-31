@@ -283,4 +283,28 @@ class ProductionServiceTest {
 
     assertThat(service.countConfirmedCycles(MACHINE_ID, from, to)).isEqualTo(120L);
   }
+
+  @Test
+  void findCycles_delegatesToRepository() {
+    org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+    ProductionCycle cycle = ProductionCycle.builder().id(UUID.randomUUID()).build();
+    org.springframework.data.domain.Page<ProductionCycle> page = new org.springframework.data.domain.PageImpl<>(List.of(cycle));
+    when(productionRepository.findByMachineId(MACHINE_ID, pageable)).thenReturn(page);
+
+    org.springframework.data.domain.Page<ProductionCycle> result = service.findCycles(MACHINE_ID, pageable);
+
+    assertThat(result.getContent()).containsExactly(cycle);
+  }
+
+  @Test
+  void findConfirmedCyclesWindow_delegatesToRepository() {
+    OffsetDateTime from = utc(6, 0, 0);
+    OffsetDateTime to = utc(14, 0, 0);
+    ProductionCycle cycle = ProductionCycle.builder().id(UUID.randomUUID()).build();
+    when(productionRepository
+        .findByMachineIdAndStateAndPulseTimestampBetweenOrderByPulseTimestampAsc(
+            MACHINE_ID, RecordState.CONFIRMED, from, to)).thenReturn(List.of(cycle));
+
+    assertThat(service.findConfirmedCyclesWindow(MACHINE_ID, from, to)).containsExactly(cycle);
+  }
 }
