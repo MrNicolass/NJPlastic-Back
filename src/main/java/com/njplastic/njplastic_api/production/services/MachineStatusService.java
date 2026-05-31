@@ -13,7 +13,11 @@ import com.njplastic.njplastic_api.production.entities.MachineStatus;
 import com.njplastic.njplastic_api.production.enums.MachineState;
 import com.njplastic.njplastic_api.production.enums.RecordState;
 import com.njplastic.njplastic_api.production.exceptions.MachineStatusPersistenceException;
+import com.njplastic.njplastic_api.production.exceptions.PauseAlreadyClassifiedException;
+import com.njplastic.njplastic_api.production.exceptions.StopMessageNotEditableException;
+import com.njplastic.njplastic_api.production.exceptions.StopNotFoundException;
 import com.njplastic.njplastic_api.production.repositories.MachineStatusRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -183,6 +187,100 @@ public class MachineStatusService {
         machineId,
         List.of(MachineState.PAUSED, MachineState.AUTO_STOPPED, MachineState.OFFLINE),
         from, to);
+  }
+
+  /**
+   * Every status record of a machine that overlaps {@code [from, to]},
+   * ordered by start time. Used by the status timeline endpoint and the
+   * shift report (RF15).
+   *
+   * @param machineId the machine UUID
+   * @param from      window start
+   * @param to        window end
+   * @return overlapping records
+   */
+  public List<MachineStatus> findWindow(UUID machineId, OffsetDateTime from, OffsetDateTime to) {
+    return machineStatusRepository.findWindow(machineId, from, to);
+  }
+
+  /**
+   * Status records in the given states overlapping {@code [from, to]},
+   * used by the shift report (RF15) to list manual pauses and auto stops
+   * in separate sections.
+   *
+   * @param machineId the machine UUID
+   * @param states    the states to include
+   * @param from      window start
+   * @param to        window end
+   * @return overlapping records
+   */
+  public List<MachineStatus> findWindowByStates(UUID machineId,
+      List<MachineState> states, OffsetDateTime from, OffsetDateTime to) {
+    return machineStatusRepository.findWindowByStates(machineId, states, from, to);
+  }
+
+  /**
+   * Classify the most recent isolated pause of a machine by attaching a
+   * reason and the author (RF09, UC03). Targets the latest PAUSED record
+   * whose reason is null; throws {@link PauseAlreadyClassifiedException}
+   * (409) when no such record exists.
+   *
+   * @param machineId the machine UUID
+   * @param reason    the reason text supplied by the user
+   * @param authorId  the user UUID registering the reason
+   * @return the updated record
+   */
+  @Transactional
+  public MachineStatus classifyLastIsolatedPause(UUID machineId, String reason, UUID authorId) {
+    MachineStatus target = machineStatusRepository
+        .findTopByMachineIdAndStateAndReasonIsNullOrderByStartTimeDesc(machineId, MachineState.PAUSED)
+        .orElseThrow(() -> new PauseAlreadyClassifiedException(
+            "No pending pause to classify for machine " + machineId));
+    target.setReason(reason);
+    target.setReasonAuthorId(authorId);
+    try {
+      return machineStatusRepository.save(target);
+    } catch (DataAccessException ex) {
+      throw new MachineStatusPersistenceException(
+          "Failed to classify isolated pause " + target.getId(), ex);
+    }
+  }
+
+  /**
+   * Edit the message of an AUTO_STOPPED record (RF18, RF19, UC12). The
+   * audit trail is captured by the global {@code AuditFilter} (RF20).
+   * Throws {@link StopNotFoundException} (404) when the id is unknown or
+   * the record does not belong to the machine, and
+   * {@link StopMessageNotEditableException} (422) when the state is not
+   * AUTO_STOPPED.
+   *
+   * @param machineId the machine UUID from the path
+   * @param stopId    the stop UUID from the path
+   * @param message   the new message text
+   * @param authorId  the user UUID editing the message
+   * @return the updated record
+   */
+  @Transactional
+  public MachineStatus editAutoStopMessage(UUID machineId, UUID stopId, String message, UUID authorId) {
+    MachineStatus stop = machineStatusRepository.findById(stopId)
+        .orElseThrow(() -> new StopNotFoundException("Stop not found: " + stopId));
+
+    if (!stop.getMachineId().equals(machineId)) {
+      throw new StopNotFoundException("Stop " + stopId + " does not belong to machine " + machineId);
+    }
+    if (stop.getState() != MachineState.AUTO_STOPPED) {
+      throw new StopMessageNotEditableException(
+          "Only AUTO_STOPPED records can have the message edited");
+    }
+
+    stop.setMessage(message);
+    stop.setReasonAuthorId(authorId);
+    try {
+      return machineStatusRepository.save(stop);
+    } catch (DataAccessException ex) {
+      throw new MachineStatusPersistenceException(
+          "Failed to edit auto-stop message " + stop.getId(), ex);
+    }
   }
 
   private void savePause(UUID machineId, OffsetDateTime start, OffsetDateTime end, int count) {

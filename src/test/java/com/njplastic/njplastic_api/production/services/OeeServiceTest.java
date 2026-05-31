@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import com.njplastic.njplastic_api.production.dtos.OeeResult;
+import com.njplastic.njplastic_api.production.dtos.OeeResultDTO;
 import com.njplastic.njplastic_api.production.entities.Machine;
 import com.njplastic.njplastic_api.production.entities.MachineStatus;
 import com.njplastic.njplastic_api.production.entities.QualityRecord;
@@ -83,7 +83,7 @@ class OeeServiceTest {
     when(productionService.countConfirmedCycles(MACHINE_ID, FROM, TO)).thenReturn(10_000L);
     when(qualityService.findForPeriod(MACHINE_ID, FROM, TO)).thenReturn(List.of());
 
-    OeeResult result = oeeService.calculate(MACHINE_ID, FROM, TO);
+    OeeResultDTO result = oeeService.calculate(MACHINE_ID, FROM, TO);
 
     assertThat(result.isPartial()).isTrue();
     assertThat(result.getQuality()).isNull();
@@ -108,7 +108,7 @@ class OeeServiceTest {
     when(qualityService.findForPeriod(MACHINE_ID, FROM, TO))
         .thenReturn(List.of(quality(950, 1000)));
 
-    OeeResult result = oeeService.calculate(MACHINE_ID, FROM, TO);
+    OeeResultDTO result = oeeService.calculate(MACHINE_ID, FROM, TO);
 
     assertThat(result.isPartial()).isFalse();
     assertThat(result.getAvailability()).isEqualTo(7.0 / 8.0);
@@ -127,7 +127,7 @@ class OeeServiceTest {
     when(productionService.countConfirmedCycles(MACHINE_ID, FROM, TO)).thenReturn(0L);
     when(qualityService.findForPeriod(MACHINE_ID, FROM, TO)).thenReturn(List.of());
 
-    OeeResult result = oeeService.calculate(MACHINE_ID, FROM, TO);
+    OeeResultDTO result = oeeService.calculate(MACHINE_ID, FROM, TO);
 
     // Full window is downtime, so availability is 0
     assertThat(result.getAvailability()).isEqualTo(0.0);
@@ -142,7 +142,7 @@ class OeeServiceTest {
     when(productionService.countConfirmedCycles(MACHINE_ID, FROM, TO)).thenReturn(0L);
     when(qualityService.findForPeriod(MACHINE_ID, FROM, TO)).thenReturn(List.of(quality(0, 0)));
 
-    OeeResult result = oeeService.calculate(MACHINE_ID, FROM, TO);
+    OeeResultDTO result = oeeService.calculate(MACHINE_ID, FROM, TO);
 
     assertThat(result.isPartial()).isTrue();
     assertThat(result.getQuality()).isNull();

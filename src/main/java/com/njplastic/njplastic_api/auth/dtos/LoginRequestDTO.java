@@ -1,5 +1,8 @@
 package com.njplastic.njplastic_api.auth.dtos;
 
+import static io.swagger.v3.oas.annotations.media.Schema.AccessMode.WRITE_ONLY;
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -20,13 +23,13 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LoginRequest {
+public class LoginRequestDTO {
 
-  @Schema(description = "Login identifier", example = "manager", requiredMode = Schema.RequiredMode.REQUIRED, accessMode = Schema.AccessMode.WRITE_ONLY, nullable = false)
+  @Schema(description = "Login identifier", example = "manager", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
   @NotBlank
   private String login;
 
-  @Schema(description = "Plain-text password (>= 12 characters)", example = "manager-dev-123", requiredMode = Schema.RequiredMode.REQUIRED, accessMode = Schema.AccessMode.WRITE_ONLY, nullable = false)
+  @Schema(description = "Plain-text password (>= 12 characters)", example = "manager-dev-123", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
   @NotBlank
   @Size(min = 12)
   private String password;
@@ -34,7 +37,7 @@ public class LoginRequest {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("LoginRequest{login=").append(login)
+    sb.append("LoginRequestDTO{login=").append(login)
         .append(", password=***")
         .append('}');
     return sb.toString();

@@ -15,7 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.njplastic.njplastic_api.production.dtos.QualityRegistrationRequest;
+import com.njplastic.njplastic_api.production.dtos.QualityRegistrationRequestDTO;
 import com.njplastic.njplastic_api.production.entities.QualityRecord;
 import com.njplastic.njplastic_api.production.repositories.QualityRecordRepository;
 
@@ -28,8 +28,8 @@ class QualityServiceTest {
   @InjectMocks
   private QualityService qualityService;
 
-  private QualityRegistrationRequest request() {
-    return QualityRegistrationRequest.builder()
+  private QualityRegistrationRequestDTO request() {
+    return QualityRegistrationRequestDTO.builder()
         .machineId(UUID.fromString("9a7b6c5d-4e3f-2a1b-0c9d-8e7f6a5b4c3d"))
         .erpOrderId("OS-2026-00123")
         .periodStart(OffsetDateTime.parse("2026-05-28T06:00:00Z"))

@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njplastic.njplastic_api.production.dtos.QualityRegistrationRequest;
+import com.njplastic.njplastic_api.production.dtos.QualityRegistrationRequestDTO;
 import com.njplastic.njplastic_api.production.entities.QualityRecord;
 import com.njplastic.njplastic_api.production.repositories.QualityRecordRepository;
 
@@ -33,7 +33,7 @@ public class QualityService {
    * @return the stored record
    */
   @Transactional
-  public QualityRecord registerQuality(QualityRegistrationRequest request, UUID authorId) {
+  public QualityRecord registerQuality(QualityRegistrationRequestDTO request, UUID authorId) {
     QualityRecord record = QualityRecord.builder()
         .machineId(request.getMachineId())
         .erpOrderId(request.getErpOrderId())

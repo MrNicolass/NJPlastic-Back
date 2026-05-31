@@ -67,7 +67,7 @@ public class MachineStatus {
   @Column(name = "reason", length = 255)
   private String reason;
 
-  @Schema(description = "Editable message for AUTO_STOPPED records (RF18, RF19)", example = "Parada detectada automaticamente apos 3 pausas consecutivas", nullable = true)
+  @Schema(description = "Editable message for AUTO_STOPPED records (RF18, RF19)", example = "Stop detected automatically after 3 consecutive pauses", nullable = true)
   @Column(name = "message", columnDefinition = "TEXT")
   private String message;
 

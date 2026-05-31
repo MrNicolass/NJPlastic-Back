@@ -8,6 +8,8 @@ import org.hibernate.type.SqlTypes;
 
 import com.njplastic.njplastic_api.auth.enums.UserRole;
 
+import static io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -54,7 +56,7 @@ public class User {
   @Column(name = "email", nullable = false, length = 128)
   private String email;
 
-  @Schema(description = "BCrypt password hash (factor 12)", accessMode = Schema.AccessMode.READ_ONLY, nullable = false)
+  @Schema(description = "BCrypt password hash (factor 12)", accessMode = READ_ONLY, nullable = false)
   @Column(name = "password_hash", nullable = false, length = 255)
   private String passwordHash;
 

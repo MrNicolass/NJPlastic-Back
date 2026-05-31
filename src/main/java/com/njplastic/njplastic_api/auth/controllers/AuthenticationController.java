@@ -5,8 +5,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njplastic.njplastic_api.auth.dtos.LoginRequest;
-import com.njplastic.njplastic_api.auth.dtos.LoginResponse;
+import com.njplastic.njplastic_api.auth.dtos.LoginRequestDTO;
+import com.njplastic.njplastic_api.auth.dtos.LoginResponseDTO;
 import com.njplastic.njplastic_api.auth.services.AuthenticationService;
 import com.njplastic.njplastic_api.common.dtos.ErrorResponseDTO;
 
@@ -34,11 +34,11 @@ public class AuthenticationController {
       + "On failure, returns the same generic 401 response regardless of whether the login exists "
       + "or the password is wrong (OWASP A07).")
   @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Authentication succeeded", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+      @ApiResponse(responseCode = "200", description = "Authentication succeeded", content = @Content(schema = @Schema(implementation = LoginResponseDTO.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request payload", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
       @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   })
-  public LoginResponse login(@Valid @RequestBody LoginRequest request) {
+  public LoginResponseDTO login(@Valid @RequestBody LoginRequestDTO request) {
     return authenticationService.authenticate(request);
   }
 }

@@ -13,7 +13,9 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -147,6 +149,34 @@ public class ProductionService {
   public long countConfirmedCycles(UUID machineId, OffsetDateTime from, OffsetDateTime to) {
     return productionRepository.countByMachineIdAndStateAndPulseTimestampBetween(
         machineId, RecordState.CONFIRMED, from, to);
+  }
+
+  /**
+   * Paginated history of production cycles for a machine, exposed by the
+   * REST controller (RF11). The page sort is controlled by the caller.
+   *
+   * @param machineId the machine UUID
+   * @param pageable  the page request (page, size, sort)
+   * @return the requested page of cycles
+   */
+  public Page<ProductionCycle> findCycles(UUID machineId, Pageable pageable) {
+    return productionRepository.findByMachineId(machineId, pageable);
+  }
+
+  /**
+   * Confirmed cycles of a machine in {@code [from, to]} ordered by pulse
+   * timestamp ascending. Used by the shift report (RF15) and any caller
+   * that needs the cycle list of a window.
+   *
+   * @param machineId the machine UUID
+   * @param from      window start
+   * @param to        window end
+   * @return confirmed cycles in the window
+   */
+  public List<ProductionCycle> findConfirmedCyclesWindow(UUID machineId, OffsetDateTime from, OffsetDateTime to) {
+    return productionRepository
+        .findByMachineIdAndStateAndPulseTimestampBetweenOrderByPulseTimestampAsc(
+            machineId, RecordState.CONFIRMED, from, to);
   }
 
   /**
