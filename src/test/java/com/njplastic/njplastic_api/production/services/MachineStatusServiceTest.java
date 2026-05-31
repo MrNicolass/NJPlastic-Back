@@ -402,4 +402,48 @@ class MachineStatusServiceTest {
         .isInstanceOf(MachineStatusPersistenceException.class)
         .hasMessageContaining("auto-stop message");
   }
+
+  @Test
+  void findConfirmedDowntimeAwaitingSync_delegatesToRepository() {
+    org.springframework.data.domain.Pageable pageable =
+        org.springframework.data.domain.PageRequest.of(0, 50);
+    MachineStatus status = open(MachineState.PAUSED);
+    when(machineStatusRepository.findByRecordStateAndStateInOrderByStartTimeAsc(
+        RecordState.CONFIRMED,
+        List.of(MachineState.PAUSED, MachineState.AUTO_STOPPED),
+        pageable)).thenReturn(List.of(status));
+
+    assertThat(service.findConfirmedDowntimeAwaitingSync(pageable)).containsExactly(status);
+  }
+
+  @Test
+  void markStatusesAsSynced_noOpWhenEmpty() {
+    service.markStatusesAsSynced(List.of());
+
+    verify(machineStatusRepository, never()).saveAll(any());
+  }
+
+  @Test
+  void markStatusesAsSynced_setsRecordStateAndSavesAll() {
+    MachineStatus a = open(MachineState.PAUSED);
+    MachineStatus b = open(MachineState.AUTO_STOPPED);
+    List<MachineStatus> records = List.of(a, b);
+
+    service.markStatusesAsSynced(records);
+
+    assertThat(a.getRecordState()).isEqualTo(RecordState.SYNCED);
+    assertThat(b.getRecordState()).isEqualTo(RecordState.SYNCED);
+    verify(machineStatusRepository).saveAll(records);
+  }
+
+  @Test
+  void markStatusesAsSynced_wrapsDataAccessException() {
+    MachineStatus a = open(MachineState.PAUSED);
+    when(machineStatusRepository.saveAll(any()))
+        .thenThrow(new DataAccessResourceFailureException("db down"));
+
+    assertThatThrownBy(() -> service.markStatusesAsSynced(List.of(a)))
+        .isInstanceOf(MachineStatusPersistenceException.class)
+        .hasMessageContaining("SYNCED");
+  }
 }

@@ -54,7 +54,8 @@ class ProductionServiceTest {
       "UTC",
       300_000L,
       30_000L,
-      "AUTO_STOP_DEFAULT");
+      "AUTO_STOP_DEFAULT",
+      200);
 
   @BeforeEach
   void setUp() {
@@ -306,5 +307,35 @@ class ProductionServiceTest {
             MACHINE_ID, RecordState.CONFIRMED, from, to)).thenReturn(List.of(cycle));
 
     assertThat(service.findConfirmedCyclesWindow(MACHINE_ID, from, to)).containsExactly(cycle);
+  }
+
+  @Test
+  void findConfirmedAwaitingSync_delegatesWithConfirmedState() {
+    org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 50);
+    ProductionCycle cycle = ProductionCycle.builder().id(UUID.randomUUID()).build();
+    when(productionRepository.findByStateOrderByPulseTimestampAsc(RecordState.CONFIRMED, pageable))
+        .thenReturn(List.of(cycle));
+
+    assertThat(service.findConfirmedAwaitingSync(pageable)).containsExactly(cycle);
+  }
+
+  @Test
+  void markCyclesAsSynced_noOpWhenEmpty() {
+    service.markCyclesAsSynced(List.of());
+
+    verify(productionRepository, never()).saveAll(any());
+  }
+
+  @Test
+  void markCyclesAsSynced_setsRecordStateAndSavesAll() {
+    ProductionCycle one = ProductionCycle.builder().id(UUID.randomUUID()).state(RecordState.CONFIRMED).build();
+    ProductionCycle two = ProductionCycle.builder().id(UUID.randomUUID()).state(RecordState.CONFIRMED).build();
+    List<ProductionCycle> cycles = List.of(one, two);
+
+    service.markCyclesAsSynced(cycles);
+
+    assertThat(one.getState()).isEqualTo(RecordState.SYNCED);
+    assertThat(two.getState()).isEqualTo(RecordState.SYNCED);
+    verify(productionRepository).saveAll(cycles);
   }
 }

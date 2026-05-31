@@ -1,11 +1,13 @@
 package com.njplastic.njplastic_api.production.services;
 
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.njplastic.njplastic_api.production.entities.Machine;
@@ -280,6 +282,43 @@ public class MachineStatusService {
     } catch (DataAccessException ex) {
       throw new MachineStatusPersistenceException(
           "Failed to edit auto-stop message " + stop.getId(), ex);
+    }
+  }
+
+  /**
+   * Confirmed PAUSED/AUTO_STOPPED records waiting to be written to the ERP,
+   * ordered by start time ascending. Page size caps the batch the ERP sync
+   * writes per window (RF14, RN07). Sole consumer is {@code ErpSyncService}.
+   *
+   * @param pageable the page request
+   * @return confirmed downtime records waiting to be synced
+   */
+  public List<MachineStatus> findConfirmedDowntimeAwaitingSync(Pageable pageable) {
+    return machineStatusRepository.findByRecordStateAndStateInOrderByStartTimeAsc(
+        RecordState.CONFIRMED,
+        List.of(MachineState.PAUSED, MachineState.AUTO_STOPPED),
+        pageable);
+  }
+
+  /**
+   * Transition the given records from CONFIRMED to SYNCED after the ERP write
+   * acknowledged them (RN07). MachineStatusService is the sole owner of the
+   * record_state transition, so callers must come through this method.
+   *
+   * @param records the records to mark
+   */
+  public void markStatusesAsSynced(Collection<MachineStatus> records) {
+    if (records.isEmpty()) {
+      return;
+    }
+    try {
+      for (MachineStatus record : records) {
+        record.setRecordState(RecordState.SYNCED);
+      }
+      machineStatusRepository.saveAll(records);
+    } catch (DataAccessException ex) {
+      throw new MachineStatusPersistenceException(
+          "Failed to mark machine_status records as SYNCED", ex);
     }
   }
 

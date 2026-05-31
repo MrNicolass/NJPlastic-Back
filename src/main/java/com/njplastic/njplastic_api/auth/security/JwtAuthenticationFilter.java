@@ -10,6 +10,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.njplastic.njplastic_api.utils.ConstantsAndParams;
+
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,16 +28,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-  private static final String BEARER_PREFIX = "Bearer ";
-
   private final JwtTokenProvider tokenProvider;
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
       FilterChain filterChain) throws ServletException, IOException {
     String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-    if (header != null && header.startsWith(BEARER_PREFIX)) {
-      String token = header.substring(BEARER_PREFIX.length()).trim();
+    if (header != null && header.startsWith(ConstantsAndParams.HTTP_BEARER_PREFIX)) {
+      String token = header.substring(ConstantsAndParams.HTTP_BEARER_PREFIX.length()).trim();
       Optional<Claims> claims = tokenProvider.parse(token);
       claims.flatMap(tokenProvider::toAuthenticatedUser)
           .ifPresent(this::populateSecurityContext);

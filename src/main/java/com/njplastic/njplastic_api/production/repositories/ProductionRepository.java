@@ -30,4 +30,6 @@ public interface ProductionRepository extends JpaRepository<ProductionCycle, UUI
 
   List<ProductionCycle> findByMachineIdAndStateAndPulseTimestampBetweenOrderByPulseTimestampAsc(
       UUID machineId, RecordState state, OffsetDateTime from, OffsetDateTime to);
+
+  List<ProductionCycle> findByStateOrderByPulseTimestampAsc(RecordState state, Pageable pageable);
 }
