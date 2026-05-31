@@ -19,8 +19,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.njplastic.njplastic_api.auth.dtos.LoginRequest;
-import com.njplastic.njplastic_api.auth.dtos.LoginResponse;
+import com.njplastic.njplastic_api.auth.dtos.LoginRequestDTO;
+import com.njplastic.njplastic_api.auth.dtos.LoginResponseDTO;
 import com.njplastic.njplastic_api.auth.entities.User;
 import com.njplastic.njplastic_api.auth.enums.UserRole;
 import com.njplastic.njplastic_api.auth.exceptions.InvalidCredentialsException;
@@ -42,7 +42,7 @@ class AuthenticationServiceTest {
   private AuthenticationService authenticationService;
 
   private User user;
-  private LoginRequest request;
+  private LoginRequestDTO request;
 
   @BeforeEach
   void setUp() {
@@ -53,7 +53,7 @@ class AuthenticationServiceTest {
         .passwordHash("hash")
         .role(UserRole.MANAGER)
         .build();
-    request = LoginRequest.builder().login("manager").password("manager-dev-123").build();
+    request = LoginRequestDTO.builder().login("manager").password("manager-dev-123").build();
   }
 
   @Test
@@ -63,7 +63,7 @@ class AuthenticationServiceTest {
     when(tokenProvider.generate(user)).thenReturn("jwt-token");
     when(tokenProvider.expirationSeconds()).thenReturn(3600L);
 
-    LoginResponse response = authenticationService.authenticate(request);
+    LoginResponseDTO response = authenticationService.authenticate(request);
 
     assertThat(response.getToken()).isEqualTo("jwt-token");
     assertThat(response.getTokenType()).isEqualTo("Bearer");

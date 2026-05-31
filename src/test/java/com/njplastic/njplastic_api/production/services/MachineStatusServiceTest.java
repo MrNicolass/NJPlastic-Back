@@ -267,4 +267,139 @@ class MachineStatusServiceTest {
 
     assertThat(service.findDowntimeOverlapping(MACHINE_ID, T0, T1)).containsExactly(record);
   }
+
+  @Test
+  void findWindow_delegatesToRepository() {
+    MachineStatus record = open(MachineState.RUNNING);
+    when(machineStatusRepository.findWindow(MACHINE_ID, T0, T1)).thenReturn(List.of(record));
+
+    assertThat(service.findWindow(MACHINE_ID, T0, T1)).containsExactly(record);
+  }
+
+  @Test
+  void findWindowByStates_delegatesToRepository() {
+    MachineStatus record = open(MachineState.PAUSED);
+    when(machineStatusRepository.findWindowByStates(MACHINE_ID,
+        List.of(MachineState.PAUSED), T0, T1)).thenReturn(List.of(record));
+
+    assertThat(service.findWindowByStates(MACHINE_ID, List.of(MachineState.PAUSED), T0, T1))
+        .containsExactly(record);
+  }
+
+  @Test
+  void classifyLastIsolatedPause_attachesReasonAndAuthor() {
+    UUID authorId = UUID.randomUUID();
+    MachineStatus target = open(MachineState.PAUSED);
+    when(machineStatusRepository
+        .findTopByMachineIdAndStateAndReasonIsNullOrderByStartTimeDesc(MACHINE_ID, MachineState.PAUSED))
+        .thenReturn(Optional.of(target));
+    when(machineStatusRepository.save(any(MachineStatus.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    MachineStatus updated = service.classifyLastIsolatedPause(MACHINE_ID, "Mold change", authorId);
+
+    assertThat(updated.getReason()).isEqualTo("Mold change");
+    assertThat(updated.getReasonAuthorId()).isEqualTo(authorId);
+    verify(machineStatusRepository).save(target);
+  }
+
+  @Test
+  void classifyLastIsolatedPause_throwsWhenNoPending() {
+    when(machineStatusRepository
+        .findTopByMachineIdAndStateAndReasonIsNullOrderByStartTimeDesc(MACHINE_ID, MachineState.PAUSED))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> service.classifyLastIsolatedPause(MACHINE_ID, "x", UUID.randomUUID()))
+        .isInstanceOf(com.njplastic.njplastic_api.production.exceptions.PauseAlreadyClassifiedException.class);
+  }
+
+  @Test
+  void classifyLastIsolatedPause_wrapsDataAccessException() {
+    MachineStatus target = open(MachineState.PAUSED);
+    when(machineStatusRepository
+        .findTopByMachineIdAndStateAndReasonIsNullOrderByStartTimeDesc(MACHINE_ID, MachineState.PAUSED))
+        .thenReturn(Optional.of(target));
+    when(machineStatusRepository.save(any(MachineStatus.class)))
+        .thenThrow(new DataAccessResourceFailureException("db down"));
+
+    assertThatThrownBy(() -> service.classifyLastIsolatedPause(MACHINE_ID, "x", UUID.randomUUID()))
+        .isInstanceOf(MachineStatusPersistenceException.class)
+        .hasMessageContaining("classify isolated pause");
+  }
+
+  @Test
+  void editAutoStopMessage_updatesMessageAndAuthor() {
+    UUID stopId = UUID.randomUUID();
+    UUID authorId = UUID.randomUUID();
+    MachineStatus stop = MachineStatus.builder()
+        .id(stopId)
+        .machineId(MACHINE_ID)
+        .state(MachineState.AUTO_STOPPED)
+        .startTime(T0)
+        .recordState(RecordState.CONFIRMED)
+        .build();
+    when(machineStatusRepository.findById(stopId)).thenReturn(Optional.of(stop));
+    when(machineStatusRepository.save(any(MachineStatus.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    MachineStatus updated = service.editAutoStopMessage(MACHINE_ID, stopId, "new message", authorId);
+
+    assertThat(updated.getMessage()).isEqualTo("new message");
+    assertThat(updated.getReasonAuthorId()).isEqualTo(authorId);
+  }
+
+  @Test
+  void editAutoStopMessage_throwsStopNotFoundWhenMissing() {
+    UUID stopId = UUID.randomUUID();
+    when(machineStatusRepository.findById(stopId)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> service.editAutoStopMessage(MACHINE_ID, stopId, "msg", UUID.randomUUID()))
+        .isInstanceOf(com.njplastic.njplastic_api.production.exceptions.StopNotFoundException.class);
+  }
+
+  @Test
+  void editAutoStopMessage_throwsStopNotFoundWhenMachineMismatch() {
+    UUID stopId = UUID.randomUUID();
+    MachineStatus stop = MachineStatus.builder()
+        .id(stopId)
+        .machineId(UUID.randomUUID())
+        .state(MachineState.AUTO_STOPPED)
+        .startTime(T0)
+        .build();
+    when(machineStatusRepository.findById(stopId)).thenReturn(Optional.of(stop));
+
+    assertThatThrownBy(() -> service.editAutoStopMessage(MACHINE_ID, stopId, "msg", UUID.randomUUID()))
+        .isInstanceOf(com.njplastic.njplastic_api.production.exceptions.StopNotFoundException.class);
+  }
+
+  @Test
+  void editAutoStopMessage_throwsWhenNotAutoStopped() {
+    UUID stopId = UUID.randomUUID();
+    MachineStatus stop = MachineStatus.builder()
+        .id(stopId)
+        .machineId(MACHINE_ID)
+        .state(MachineState.PAUSED)
+        .startTime(T0)
+        .build();
+    when(machineStatusRepository.findById(stopId)).thenReturn(Optional.of(stop));
+
+    assertThatThrownBy(() -> service.editAutoStopMessage(MACHINE_ID, stopId, "msg", UUID.randomUUID()))
+        .isInstanceOf(com.njplastic.njplastic_api.production.exceptions.StopMessageNotEditableException.class);
+  }
+
+  @Test
+  void editAutoStopMessage_wrapsDataAccessException() {
+    UUID stopId = UUID.randomUUID();
+    MachineStatus stop = MachineStatus.builder()
+        .id(stopId)
+        .machineId(MACHINE_ID)
+        .state(MachineState.AUTO_STOPPED)
+        .startTime(T0)
+        .build();
+    when(machineStatusRepository.findById(stopId)).thenReturn(Optional.of(stop));
+    when(machineStatusRepository.save(any(MachineStatus.class)))
+        .thenThrow(new DataAccessResourceFailureException("db down"));
+
+    assertThatThrownBy(() -> service.editAutoStopMessage(MACHINE_ID, stopId, "msg", UUID.randomUUID()))
+        .isInstanceOf(MachineStatusPersistenceException.class)
+        .hasMessageContaining("auto-stop message");
+  }
 }

@@ -16,9 +16,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njplastic.njplastic_api.auth.dtos.LoginRequest;
-import com.njplastic.njplastic_api.auth.dtos.LoginResponse;
-import com.njplastic.njplastic_api.auth.dtos.UserSummary;
+import com.njplastic.njplastic_api.auth.dtos.LoginRequestDTO;
+import com.njplastic.njplastic_api.auth.dtos.LoginResponseDTO;
+import com.njplastic.njplastic_api.auth.dtos.UserSummaryDTO;
 import com.njplastic.njplastic_api.auth.enums.UserRole;
 import com.njplastic.njplastic_api.auth.exceptions.InvalidCredentialsException;
 import com.njplastic.njplastic_api.auth.services.AuthenticationService;
@@ -36,16 +36,16 @@ class AuthenticationControllerTest {
 
   private String json(String login, String password) throws Exception {
     return objectMapper.writeValueAsString(
-        LoginRequest.builder().login(login).password(password).build());
+        LoginRequestDTO.builder().login(login).password(password).build());
   }
 
   @Test
   void login_returns200WithToken() throws Exception {
-    LoginResponse response = LoginResponse.builder()
+    LoginResponseDTO response = LoginResponseDTO.builder()
         .token("jwt-token")
         .tokenType("Bearer")
         .expiresInSeconds(3600L)
-        .user(UserSummary.builder()
+        .user(UserSummaryDTO.builder()
             .id(UUID.randomUUID())
             .login("manager")
             .name("Manager Default")
@@ -71,7 +71,7 @@ class AuthenticationControllerTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(json("manager", "wrong-password")))
         .andExpect(status().isUnauthorized())
-        .andExpect(jsonPath("$.message").value("Credenciais inválidas"))
+        .andExpect(jsonPath("$.message").value("Invalid credentials"))
         .andExpect(jsonPath("$.clazzError").value("InvalidCredentialsException"));
   }
 

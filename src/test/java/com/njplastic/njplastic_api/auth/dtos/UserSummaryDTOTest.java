@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import com.njplastic.njplastic_api.auth.entities.User;
 import com.njplastic.njplastic_api.auth.enums.UserRole;
 
-class UserSummaryTest {
+class UserSummaryDTOTest {
 
   private User sampleUser() {
     return User.builder()
@@ -27,7 +27,7 @@ class UserSummaryTest {
 
   @Test
   void from_copiesNonSensitiveFields() {
-    UserSummary summary = UserSummary.from(sampleUser());
+    UserSummaryDTO summary = UserSummaryDTO.from(sampleUser());
     assertThat(summary.getId()).isEqualTo(UUID.fromString("3f1c2b9e-7a4d-4e2a-9b8c-1d2e3f4a5b6c"));
     assertThat(summary.getLogin()).isEqualTo("manager");
     assertThat(summary.getName()).isEqualTo("Manager Default");
@@ -38,7 +38,7 @@ class UserSummaryTest {
 
   @Test
   void toString_doesNotLeakEmailOrPassword() {
-    String text = UserSummary.from(sampleUser()).toString();
+    String text = UserSummaryDTO.from(sampleUser()).toString();
     assertThat(text).doesNotContain("manager@njplastic.com");
     assertThat(text).doesNotContain("secret");
     assertThat(text).contains("login=manager");

@@ -7,7 +7,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
-import com.njplastic.njplastic_api.production.dtos.OeeResult;
+import com.njplastic.njplastic_api.production.dtos.OeeResultDTO;
 import com.njplastic.njplastic_api.production.entities.Machine;
 import com.njplastic.njplastic_api.production.entities.MachineStatus;
 import com.njplastic.njplastic_api.production.entities.QualityRecord;
@@ -17,15 +17,11 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Computes OEE (Availability x Performance x Quality, RF10) for a machine over
- * a
- * window. Availability and Performance always come from production_cycle and
+ * a window. Availability and Performance always come from production_cycle and
  * machine_status; the Quality factor is optional and read from quality_record,
- * so
- * the result is returned as partial (Quality and OEE null) until a user
- * registers
- * the counts at the end of a production order. Owns no repository - it
- * orchestrates
- * the production aggregates through their services.
+ * so the result is returned as partial (Quality and OEE null) until a user
+ * registers the counts at the end of a production order. Owns no repository -
+ * it orchestrates the production aggregates through their services.
  */
 @Service
 @RequiredArgsConstructor
@@ -45,15 +41,27 @@ public class OeeService {
    * @return the OEE result, possibly partial when no quality data covers the
    *         window
    */
-  public OeeResult calculate(UUID machineId, OffsetDateTime from, OffsetDateTime to) {
+  public OeeResultDTO calculate(UUID machineId, OffsetDateTime from, OffsetDateTime to) {
     Machine machine = machineService.findById(machineId)
-        .orElseThrow(() -> new UnknownMachineException("Maquina nao encontrada: " + machineId));
+        .orElseThrow(() -> new UnknownMachineException("Machine not found: " + machineId));
 
     long plannedMs = Math.max(0L, Duration.between(from, to).toMillis());
+    if (plannedMs == 0L) {
+      return OeeResultDTO.builder()
+          .machineId(machineId)
+          .periodStart(from)
+          .periodEnd(to)
+          .availability(0.0)
+          .performance(0.0)
+          .quality(null)
+          .oee(null)
+          .partial(true)
+          .build();
+    }
+
     long downtimeMs = downtimeMs(machineId, from, to);
     long runMs = Math.max(0L, plannedMs - downtimeMs);
-
-    double availability = plannedMs > 0 ? (double) runMs / plannedMs : 0.0;
+    double availability = (double) runMs / plannedMs;
 
     long confirmedCycles = productionService.countConfirmedCycles(machineId, from, to);
     long idealMs = confirmedCycles * machine.getStandardCycleMs();
@@ -63,7 +71,7 @@ public class OeeService {
     boolean partial = quality == null;
     Double oee = partial ? null : availability * performance * quality;
 
-    return OeeResult.builder()
+    return OeeResultDTO.builder()
         .machineId(machineId)
         .periodStart(from)
         .periodEnd(to)

@@ -5,9 +5,9 @@ import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.njplastic.njplastic_api.auth.dtos.LoginRequest;
-import com.njplastic.njplastic_api.auth.dtos.LoginResponse;
-import com.njplastic.njplastic_api.auth.dtos.UserSummary;
+import com.njplastic.njplastic_api.auth.dtos.LoginRequestDTO;
+import com.njplastic.njplastic_api.auth.dtos.LoginResponseDTO;
+import com.njplastic.njplastic_api.auth.dtos.UserSummaryDTO;
 import com.njplastic.njplastic_api.auth.entities.User;
 import com.njplastic.njplastic_api.auth.exceptions.InvalidCredentialsException;
 import com.njplastic.njplastic_api.auth.security.JwtTokenProvider;
@@ -39,7 +39,7 @@ public class AuthenticationService {
    * @param request the login credentials
    * @return the issued token and user summary
    */
-  public LoginResponse authenticate(LoginRequest request) {
+  public LoginResponseDTO authenticate(LoginRequestDTO request) {
     Optional<User> userOpt = userService.findActiveByLogin(request.getLogin());
     String hash = userOpt.map(User::getPasswordHash).orElse(DUMMY_HASH);
     boolean matches = passwordEncoder.matches(request.getPassword(), hash);
@@ -50,11 +50,11 @@ public class AuthenticationService {
 
     User user = userOpt.get();
     String token = tokenProvider.generate(user);
-    return LoginResponse.builder()
+    return LoginResponseDTO.builder()
         .token(token)
         .tokenType("Bearer")
         .expiresInSeconds(tokenProvider.expirationSeconds())
-        .user(UserSummary.from(user))
+        .user(UserSummaryDTO.from(user))
         .build();
   }
 }

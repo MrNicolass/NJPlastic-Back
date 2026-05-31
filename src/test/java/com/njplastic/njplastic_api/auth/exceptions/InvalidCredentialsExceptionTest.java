@@ -12,7 +12,7 @@ class InvalidCredentialsExceptionTest {
   @Test
   void carriesFixedMessageAndUnauthorizedStatus() {
     InvalidCredentialsException ex = new InvalidCredentialsException();
-    assertThat(ex.getMessage()).isEqualTo("Credenciais inválidas");
+    assertThat(ex.getMessage()).isEqualTo("Invalid credentials");
     assertThat(ex.getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED);
     assertThat(ex).isInstanceOf(BaseApiException.class);
   }

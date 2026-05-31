@@ -9,7 +9,7 @@ import com.njplastic.njplastic_api.config.exceptions.BaseApiUnauthorizedExceptio
  */
 public class InvalidCredentialsException extends BaseApiUnauthorizedException {
 
-  private static final String MESSAGE = "Credenciais inválidas";
+  private static final String MESSAGE = "Invalid credentials";
 
   public InvalidCredentialsException() {
     super(MESSAGE);

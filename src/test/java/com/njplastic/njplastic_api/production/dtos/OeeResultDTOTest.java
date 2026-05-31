@@ -7,10 +7,10 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-class OeeResultTest {
+class OeeResultDTOTest {
 
-  private OeeResult sample() {
-    return OeeResult.builder()
+  private OeeResultDTO sample() {
+    return OeeResultDTO.builder()
         .machineId(UUID.fromString("9a7b6c5d-4e3f-2a1b-0c9d-8e7f6a5b4c3d"))
         .periodStart(OffsetDateTime.parse("2026-05-28T06:00:00Z"))
         .periodEnd(OffsetDateTime.parse("2026-05-28T14:00:00Z"))
@@ -24,7 +24,7 @@ class OeeResultTest {
 
   @Test
   void builder_populatesAllFields() {
-    OeeResult result = sample();
+    OeeResultDTO result = sample();
     assertThat(result.getMachineId()).isEqualTo(UUID.fromString("9a7b6c5d-4e3f-2a1b-0c9d-8e7f6a5b4c3d"));
     assertThat(result.getAvailability()).isEqualTo(0.92);
     assertThat(result.getPerformance()).isEqualTo(0.88);
@@ -37,7 +37,7 @@ class OeeResultTest {
   void toString_includesAllFields() {
     String text = sample().toString();
     assertThat(text)
-        .contains("OeeResult{")
+        .contains("OeeResultDTO{")
         .contains("availability=0.92")
         .contains("performance=0.88")
         .contains("quality=0.95")
@@ -47,7 +47,7 @@ class OeeResultTest {
 
   @Test
   void partialResult_keepsQualityAndOeeNull() {
-    OeeResult partial = OeeResult.builder()
+    OeeResultDTO partial = OeeResultDTO.builder()
         .machineId(UUID.randomUUID())
         .periodStart(OffsetDateTime.parse("2026-05-28T06:00:00Z"))
         .periodEnd(OffsetDateTime.parse("2026-05-28T14:00:00Z"))
@@ -62,7 +62,7 @@ class OeeResultTest {
 
   @Test
   void noArgsConstructor_yieldsDefaults() {
-    OeeResult empty = new OeeResult();
+    OeeResultDTO empty = new OeeResultDTO();
     assertThat(empty.getMachineId()).isNull();
     assertThat(empty.getQuality()).isNull();
     assertThat(empty.isPartial()).isFalse();

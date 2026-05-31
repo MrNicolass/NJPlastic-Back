@@ -7,10 +7,10 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-class QualityRegistrationRequestTest {
+class QualityRegistrationRequestDTOTest {
 
-  private QualityRegistrationRequest sample() {
-    return QualityRegistrationRequest.builder()
+  private QualityRegistrationRequestDTO sample() {
+    return QualityRegistrationRequestDTO.builder()
         .machineId(UUID.fromString("9a7b6c5d-4e3f-2a1b-0c9d-8e7f6a5b4c3d"))
         .erpOrderId("OS-2026-00123")
         .periodStart(OffsetDateTime.parse("2026-05-28T06:00:00Z"))
@@ -22,7 +22,7 @@ class QualityRegistrationRequestTest {
 
   @Test
   void builder_populatesAllFields() {
-    QualityRegistrationRequest request = sample();
+    QualityRegistrationRequestDTO request = sample();
     assertThat(request.getErpOrderId()).isEqualTo("OS-2026-00123");
     assertThat(request.getGoodCount()).isEqualTo(950);
     assertThat(request.getTotalCount()).isEqualTo(1000);
@@ -32,7 +32,7 @@ class QualityRegistrationRequestTest {
   void toString_includesNonSensitiveFields() {
     String text = sample().toString();
     assertThat(text)
-        .contains("QualityRegistrationRequest{")
+        .contains("QualityRegistrationRequestDTO{")
         .contains("erpOrderId=OS-2026-00123")
         .contains("goodCount=950")
         .contains("totalCount=1000");
@@ -40,7 +40,7 @@ class QualityRegistrationRequestTest {
 
   @Test
   void settersUpdateFields() {
-    QualityRegistrationRequest request = new QualityRegistrationRequest();
+    QualityRegistrationRequestDTO request = new QualityRegistrationRequestDTO();
     UUID id = UUID.randomUUID();
     request.setMachineId(id);
     request.setGoodCount(10);

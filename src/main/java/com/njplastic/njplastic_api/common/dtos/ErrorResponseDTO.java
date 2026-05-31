@@ -1,5 +1,9 @@
 package com.njplastic.njplastic_api.common.dtos;
 
+import static io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY;
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,16 +17,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Standard response for API errors")
 public class ErrorResponseDTO {
 
-  @Schema(description = "Date and time when the error occurred", example = "2025-06-20T14:30:15.123", requiredMode = Schema.RequiredMode.REQUIRED, accessMode = Schema.AccessMode.READ_ONLY, nullable = false)
+  @Schema(description = "Date and time when the error occurred", example = "2025-06-20T14:30:15.123", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private LocalDateTime timestamp;
 
-  @Schema(description = "Descriptive error message", example = "Resource not found", requiredMode = Schema.RequiredMode.REQUIRED, accessMode = Schema.AccessMode.READ_ONLY, nullable = false)
+  @Schema(description = "Descriptive error message", example = "Resource not found", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private String message;
 
-  @Schema(description = "Detailed error description", example = "The requested resource was not found on the server.", requiredMode = Schema.RequiredMode.NOT_REQUIRED, accessMode = Schema.AccessMode.READ_ONLY, nullable = true)
+  @Schema(description = "Detailed error description", example = "The requested resource was not found on the server.", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
   private String description;
 
-  @Schema(description = "Name of the exception class that generated the error", example = "ResourceNotFoundException", requiredMode = Schema.RequiredMode.REQUIRED, accessMode = Schema.AccessMode.READ_ONLY, nullable = false)
+  @Schema(description = "Name of the exception class that generated the error", example = "ResourceNotFoundException", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private String clazzError;
 
   /**

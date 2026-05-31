@@ -17,32 +17,83 @@ import com.njplastic.njplastic_api.production.enums.MachineState;
 @Repository
 public interface MachineStatusRepository extends JpaRepository<MachineStatus, UUID> {
 
-  Optional<MachineStatus> findTopByMachineIdAndEndTimeIsNullOrderByStartTimeDesc(UUID machineId);
+	Optional<MachineStatus> findTopByMachineIdAndEndTimeIsNullOrderByStartTimeDesc(UUID machineId);
 
-  Optional<MachineStatus> findTopByMachineIdOrderByStartTimeDesc(UUID machineId);
+	Optional<MachineStatus> findTopByMachineIdOrderByStartTimeDesc(UUID machineId);
 
-  /**
-   * Status records of the given states that overlap the window [from, to]. A
-   * record overlaps when it starts before the window ends and is either still
-   * open
-   * or ends after the window starts. Used to compute downtime for OEE (RF10).
-   *
-   * @param machineId the machine UUID
-   * @param states    the operational states to include (downtime states)
-   * @param from      window start
-   * @param to        window end
-   * @return overlapping status records
-   */
-  @Query("""
-      SELECT ms FROM MachineStatus ms
-      WHERE ms.machineId = :machineId
-        AND ms.state IN :states
-        AND ms.startTime < :to
-        AND (ms.endTime IS NULL OR ms.endTime > :from)
-      """)
-  List<MachineStatus> findOverlapping(
-      @Param("machineId") UUID machineId,
-      @Param("states") Collection<MachineState> states,
-      @Param("from") OffsetDateTime from,
-      @Param("to") OffsetDateTime to);
+	Optional<MachineStatus> findTopByMachineIdAndStateAndReasonIsNullOrderByStartTimeDesc(
+			UUID machineId, MachineState state);
+
+	/**
+	 * Status records of a machine whose window overlaps {@code [from, to]},
+	 * regardless of state. A record overlaps when it starts before the window
+	 * ends and is either still open or ends after the window starts. Used to
+	 * build the status timeline and the shift report (RF15).
+	 *
+	 * @param machineId the machine UUID
+	 * @param from      window start
+	 * @param to        window end
+	 * @return overlapping records ordered by start time
+	 */
+	@Query("""
+			SELECT ms FROM MachineStatus ms
+			WHERE ms.machineId = :machineId
+			  AND ms.startTime < :to
+			  AND (ms.endTime IS NULL OR ms.endTime > :from)
+			ORDER BY ms.startTime ASC
+			""")
+	List<MachineStatus> findWindow(
+			@Param("machineId") UUID machineId,
+			@Param("from") OffsetDateTime from,
+			@Param("to") OffsetDateTime to);
+
+	/**
+	 * Status records of a machine in the given states whose window overlaps
+	 * {@code [from, to]}. Used by the shift report (RF15) to list manual
+	 * pauses and auto stops separately.
+	 *
+	 * @param machineId the machine UUID
+	 * @param states    the operational states to include
+	 * @param from      window start
+	 * @param to        window end
+	 * @return overlapping records ordered by start time
+	 */
+	@Query("""
+			SELECT ms FROM MachineStatus ms
+			WHERE ms.machineId = :machineId
+			  AND ms.state IN :states
+			  AND ms.startTime < :to
+			  AND (ms.endTime IS NULL OR ms.endTime > :from)
+			ORDER BY ms.startTime ASC
+			""")
+	List<MachineStatus> findWindowByStates(
+			@Param("machineId") UUID machineId,
+			@Param("states") Collection<MachineState> states,
+			@Param("from") OffsetDateTime from,
+			@Param("to") OffsetDateTime to);
+
+	/**
+	 * Status records of the given states that overlap the window [from, to]. A
+	 * record overlaps when it starts before the window ends and is either still
+	 * open
+	 * or ends after the window starts. Used to compute downtime for OEE (RF10).
+	 *
+	 * @param machineId the machine UUID
+	 * @param states    the operational states to include (downtime states)
+	 * @param from      window start
+	 * @param to        window end
+	 * @return overlapping status records
+	 */
+	@Query("""
+			SELECT ms FROM MachineStatus ms
+			WHERE ms.machineId = :machineId
+			  AND ms.state IN :states
+			  AND ms.startTime < :to
+			  AND (ms.endTime IS NULL OR ms.endTime > :from)
+			""")
+	List<MachineStatus> findOverlapping(
+			@Param("machineId") UUID machineId,
+			@Param("states") Collection<MachineState> states,
+			@Param("from") OffsetDateTime from,
+			@Param("to") OffsetDateTime to);
 }
