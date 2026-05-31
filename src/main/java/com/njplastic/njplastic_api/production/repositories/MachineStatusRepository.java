@@ -13,6 +13,8 @@ import org.springframework.stereotype.Repository;
 
 import com.njplastic.njplastic_api.production.entities.MachineStatus;
 import com.njplastic.njplastic_api.production.enums.MachineState;
+import com.njplastic.njplastic_api.production.enums.RecordState;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface MachineStatusRepository extends JpaRepository<MachineStatus, UUID> {
@@ -96,4 +98,7 @@ public interface MachineStatusRepository extends JpaRepository<MachineStatus, UU
 			@Param("states") Collection<MachineState> states,
 			@Param("from") OffsetDateTime from,
 			@Param("to") OffsetDateTime to);
+
+	List<MachineStatus> findByRecordStateAndStateInOrderByStartTimeAsc(
+			RecordState recordState, Collection<MachineState> states, Pageable pageable);
 }

@@ -7,6 +7,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,7 +46,6 @@ import lombok.RequiredArgsConstructor;
 public class ProductionService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ProductionService.class);
-  private static final int PAUSE_SCAN_LIMIT = 200;
 
   private final ProductionRepository productionRepository;
   private final MachineService machineService;
@@ -164,6 +164,36 @@ public class ProductionService {
   }
 
   /**
+   * Confirmed cycles waiting to be written to the ERP, ordered by pulse
+   * timestamp ascending. The page size caps the batch the ERP sync writes per
+   * window (RF14, RN07). Sole consumer is {@code ErpSyncService}.
+   *
+   * @param pageable the page request
+   * @return confirmed cycles waiting to be synced
+   */
+  public List<ProductionCycle> findConfirmedAwaitingSync(Pageable pageable) {
+    return productionRepository.findByStateOrderByPulseTimestampAsc(RecordState.CONFIRMED, pageable);
+  }
+
+  /**
+   * Transition the given cycles from CONFIRMED to SYNCED after the ERP write
+   * acknowledged them (RN07). ProductionService is the sole owner of the
+   * record_state transition, so callers must come through this method.
+   *
+   * @param cycles the cycles to mark
+   */
+  @Transactional
+  public void markCyclesAsSynced(Collection<ProductionCycle> cycles) {
+    if (cycles.isEmpty()) {
+      return;
+    }
+    for (ProductionCycle cycle : cycles) {
+      cycle.setState(RecordState.SYNCED);
+    }
+    productionRepository.saveAll(cycles);
+  }
+
+  /**
    * Confirmed cycles of a machine in {@code [from, to]} ordered by pulse
    * timestamp ascending. Used by the shift report (RF15) and any caller
    * that needs the cycle list of a window.
@@ -212,7 +242,7 @@ public class ProductionService {
    */
   private int consecutivePauseCount(Machine machine, long thresholdMs) {
     List<ProductionCycle> recent = productionRepository.findByMachineIdAndStateOrderByPulseTimestampDesc(
-        machine.getId(), RecordState.CONFIRMED, PageRequest.of(0, PAUSE_SCAN_LIMIT));
+        machine.getId(), RecordState.CONFIRMED, PageRequest.of(0, properties.pauseScanLimit()));
     int count = 0;
     for (ProductionCycle cycle : recent) {
       if (cycle.getIntervalMs() != null && cycle.getIntervalMs() > thresholdMs) {

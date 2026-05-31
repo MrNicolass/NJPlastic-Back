@@ -26,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 public class MqttSubscriber {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MqttSubscriber.class);
-  private static final long RECONNECT_INTERVAL_MS = 30000L;
 
   private final IMqttClient client;
   private final MqttConnectOptions options;
@@ -41,7 +40,7 @@ public class MqttSubscriber {
     ensureConnected();
   }
 
-  @Scheduled(fixedDelay = RECONNECT_INTERVAL_MS)
+  @Scheduled(fixedDelayString = "${app.mqtt.reconnect-interval-ms:30000}")
   void ensureConnected() {
     if (client.isConnected() && subscribed) {
       return;

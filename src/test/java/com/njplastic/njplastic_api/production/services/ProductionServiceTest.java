@@ -54,7 +54,8 @@ class ProductionServiceTest {
       "UTC",
       300_000L,
       30_000L,
-      "AUTO_STOP_DEFAULT");
+      "AUTO_STOP_DEFAULT",
+      200);
 
   @BeforeEach
   void setUp() {
