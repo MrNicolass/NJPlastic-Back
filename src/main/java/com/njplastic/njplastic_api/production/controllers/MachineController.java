@@ -8,8 +8,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,14 +19,18 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njplastic.njplastic_api.auth.security.AuthenticatedUser;
 import com.njplastic.njplastic_api.common.dtos.ErrorResponseDTO;
 import com.njplastic.njplastic_api.production.dtos.EditStopMessageRequestDTO;
+import com.njplastic.njplastic_api.production.dtos.MachineDetailResponseDTO;
+import com.njplastic.njplastic_api.production.dtos.MachineRequestDTO;
 import com.njplastic.njplastic_api.production.dtos.MachineStatusEntryDTO;
 import com.njplastic.njplastic_api.production.dtos.MachineStatusResponseDTO;
 import com.njplastic.njplastic_api.production.dtos.MachineSummaryDTO;
+import com.njplastic.njplastic_api.production.dtos.MachineUpdateRequestDTO;
 import com.njplastic.njplastic_api.production.dtos.OeeResultDTO;
 import com.njplastic.njplastic_api.production.dtos.ProductionCycleResponseDTO;
 import com.njplastic.njplastic_api.production.dtos.QualityRegistrationRequestDTO;
@@ -32,6 +38,7 @@ import com.njplastic.njplastic_api.production.dtos.RegisterPauseRequestDTO;
 import com.njplastic.njplastic_api.production.entities.Machine;
 import com.njplastic.njplastic_api.production.entities.MachineStatus;
 import com.njplastic.njplastic_api.production.entities.QualityRecord;
+import com.njplastic.njplastic_api.production.exceptions.UnknownMachineException;
 import com.njplastic.njplastic_api.production.services.MachineService;
 import com.njplastic.njplastic_api.production.services.MachineStatusService;
 import com.njplastic.njplastic_api.production.services.OeeService;
@@ -209,5 +216,87 @@ public class MachineController {
     Machine machine = machineService.requireAccessible(machineId, principal);
     request.setMachineId(machine.getId());
     return qualityService.registerQuality(request, principal.id());
+  }
+
+  @GetMapping("/{machineId}/detail")
+  @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')")
+  @Operation(summary = "Machine detail with detection parameters (EP-BE-08)", description = "Returns the full Machine projection with standardCycleMs, toleranceFactor, consecutivePausesToStop and offlineWindowMs. Scope-checked via MachineService.requireAccessible (RN02-RN04).")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Machine detail", content = @Content(schema = @Schema(implementation = MachineDetailResponseDTO.class))),
+      @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Machine is outside the caller scope", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "404", description = "Unknown machine id", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  })
+  public MachineDetailResponseDTO getMachineDetail(
+      @PathVariable UUID machineId,
+      @AuthenticationPrincipal AuthenticatedUser principal) {
+    return MachineDetailResponseDTO.from(machineService.requireAccessible(machineId, principal));
+  }
+
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  @PreAuthorize("hasRole('MANAGER')")
+  @Operation(summary = "Register a machine (EP-BE-08)", description = "Validates uniqueness of the short code. The machine is created active.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "201", description = "Machine created", content = @Content(schema = @Schema(implementation = MachineDetailResponseDTO.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid request payload", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Role is not allowed", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "409", description = "Machine code already in use", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  })
+  public MachineDetailResponseDTO createMachine(@Valid @RequestBody MachineRequestDTO request) {
+    Machine entity = Machine.builder()
+        .code(request.getCode())
+        .description(request.getDescription())
+        .sector(request.getSector())
+        .standardCycleMs(request.getStandardCycleMs())
+        .toleranceFactor(request.getToleranceFactor())
+        .consecutivePausesToStop(request.getConsecutivePausesToStop())
+        .offlineWindowMs(request.getOfflineWindowMs())
+        .active(true)
+        .build();
+    return MachineDetailResponseDTO.from(machineService.create(entity));
+  }
+
+  @PutMapping("/{machineId}")
+  @PreAuthorize("hasRole('MANAGER')")
+  @Operation(summary = "Update machine parameters (EP-BE-08)", description = "Code is immutable - it identifies the machine on the MQTT payload (RFC §5.3) and on historical cycles.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Machine updated", content = @Content(schema = @Schema(implementation = MachineDetailResponseDTO.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid request payload", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Role is not allowed", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "404", description = "Unknown machine id", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  })
+  public MachineDetailResponseDTO updateMachine(
+      @PathVariable UUID machineId,
+      @Valid @RequestBody MachineUpdateRequestDTO request) {
+    if (machineService.findById(machineId).isEmpty()) {
+      throw new UnknownMachineException("Machine not found: " + machineId);
+    }
+    Machine patch = Machine.builder()
+        .description(request.getDescription())
+        .sector(request.getSector())
+        .standardCycleMs(request.getStandardCycleMs())
+        .toleranceFactor(request.getToleranceFactor())
+        .consecutivePausesToStop(request.getConsecutivePausesToStop())
+        .offlineWindowMs(request.getOfflineWindowMs())
+        .active(request.isActive())
+        .build();
+    return MachineDetailResponseDTO.from(machineService.update(machineId, patch));
+  }
+
+  @DeleteMapping("/{machineId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PreAuthorize("hasRole('MANAGER')")
+  @Operation(summary = "Soft-delete a machine (EP-BE-08)", description = "Flips active to false. Preserves cycle history and audit traceability.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "204", description = "Machine soft-deleted"),
+      @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Role is not allowed", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "404", description = "Unknown machine id", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  })
+  public void deleteMachine(@PathVariable UUID machineId) {
+    machineService.softDelete(machineId);
   }
 }

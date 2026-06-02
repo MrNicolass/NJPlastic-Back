@@ -99,6 +99,30 @@ public class JwtTokenProvider {
     }
   }
 
+  /**
+   * Issue a fresh token carrying the same claims as the supplied principal.
+   * Used by {@code POST /auth/refresh} (EP-BE-02 reopened) - the frontend
+   * dispatches this ~5 min before {@code exp}, keeping the user signed in
+   * without forcing a re-login or holding a separate refresh-token store.
+   *
+   * @param principal authenticated user resolved from the current JWT
+   * @return new compact HS256 token with fresh issuedAt/expiration
+   */
+  public String refresh(AuthenticatedUser principal) {
+    Instant now = Instant.now();
+    Instant exp = now.plusSeconds(expirationMinutes * 60);
+    return Jwts.builder()
+        .issuer(issuer)
+        .subject(principal.id().toString())
+        .issuedAt(Date.from(now))
+        .expiration(Date.from(exp))
+        .claim(CLAIM_ROLE, principal.role().name())
+        .claim(CLAIM_SECTOR, principal.sector())
+        .claim(CLAIM_SHIFT, principal.shift())
+        .signWith(signingKey, Jwts.SIG.HS256)
+        .compact();
+  }
+
   public long expirationSeconds() {
     return expirationMinutes * 60;
   }

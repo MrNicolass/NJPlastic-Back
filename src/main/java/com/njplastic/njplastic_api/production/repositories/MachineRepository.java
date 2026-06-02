@@ -17,4 +17,6 @@ public interface MachineRepository extends JpaRepository<Machine, UUID> {
   List<Machine> findAllByActiveTrue();
 
   List<Machine> findAllByActiveTrueAndSectorIgnoreCase(String sector);
+
+  boolean existsByCode(String code);
 }
