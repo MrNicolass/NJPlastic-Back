@@ -1,15 +1,18 @@
 package com.njplastic.njplastic_api.production.services;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.njplastic.njplastic_api.auth.enums.UserRole;
 import com.njplastic.njplastic_api.auth.security.AuthenticatedUser;
 import com.njplastic.njplastic_api.production.entities.Machine;
 import com.njplastic.njplastic_api.production.exceptions.MachineAccessDeniedException;
+import com.njplastic.njplastic_api.production.exceptions.MachineAlreadyExistsException;
 import com.njplastic.njplastic_api.production.exceptions.UnknownMachineException;
 import com.njplastic.njplastic_api.production.repositories.MachineRepository;
 
@@ -97,5 +100,64 @@ public class MachineService {
       throw new MachineAccessDeniedException("Access denied for machine " + id);
     }
     return machine;
+  }
+
+  /**
+   * Persist a new machine. The supplied {@code code} must be globally unique
+   * - the database enforces it, and this check produces a clean 409 instead
+   * of a generic constraint violation. Created machines are always {@code active=true}.
+   *
+   * @param machine fully populated entity
+   * @return the persisted entity
+   * @throws MachineAlreadyExistsException if the code is taken
+   */
+  @Transactional
+  public Machine create(Machine machine) {
+    if (machineRepository.existsByCode(machine.getCode())) {
+      throw new MachineAlreadyExistsException(machine.getCode());
+    }
+    machine.setActive(true);
+    return machineRepository.save(machine);
+  }
+
+  /**
+   * Apply administrative changes to an existing machine. {@code code} is
+   * deliberately not editable - it identifies the machine on the MQTT payload
+   * (RFC §5.3) and changing it would orphan in-flight messages and historical
+   * cycles.
+   *
+   * @param id      machine UUID
+   * @param updated entity carrying the fields to apply
+   * @return the persisted entity after the update
+   * @throws UnknownMachineException if no machine matches {@code id}
+   */
+  @Transactional
+  public Machine update(UUID id, Machine updated) {
+    Machine current = machineRepository.findById(id)
+        .orElseThrow(() -> new UnknownMachineException("Machine not found: " + id));
+    current.setDescription(updated.getDescription());
+    current.setSector(updated.getSector());
+    current.setStandardCycleMs(updated.getStandardCycleMs());
+    current.setToleranceFactor(updated.getToleranceFactor());
+    current.setConsecutivePausesToStop(updated.getConsecutivePausesToStop());
+    current.setOfflineWindowMs(updated.getOfflineWindowMs());
+    current.setActive(updated.isActive());
+    return machineRepository.save(current);
+  }
+
+  /**
+   * Mark the machine as inactive. Soft-delete preserves cycle history and
+   * audit traceability.
+   *
+   * @param id machine UUID
+   * @throws UnknownMachineException if no machine matches {@code id}
+   */
+  @Transactional
+  public void softDelete(UUID id) {
+    Machine current = machineRepository.findById(id)
+        .orElseThrow(() -> new UnknownMachineException("Machine not found: " + id));
+    current.setActive(false);
+    current.setUpdatedAt(OffsetDateTime.now());
+    machineRepository.save(current);
   }
 }

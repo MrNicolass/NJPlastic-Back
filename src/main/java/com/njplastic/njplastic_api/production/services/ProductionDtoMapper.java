@@ -4,9 +4,11 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import com.njplastic.njplastic_api.audit.entities.AuditLog;
 import com.njplastic.njplastic_api.production.dtos.MachineStatusEntryDTO;
 import com.njplastic.njplastic_api.production.dtos.MachineSummaryDTO;
 import com.njplastic.njplastic_api.production.dtos.ProductionCycleResponseDTO;
+import com.njplastic.njplastic_api.production.dtos.StopEditDTO;
 import com.njplastic.njplastic_api.production.entities.Machine;
 import com.njplastic.njplastic_api.production.entities.MachineStatus;
 import com.njplastic.njplastic_api.production.entities.ProductionCycle;
@@ -85,6 +87,31 @@ public class ProductionDtoMapper {
         .sequence(cycle.getSequence())
         .intervalMs(cycle.getIntervalMs())
         .state(cycle.getState())
+        .build();
+  }
+
+  /**
+   * Assemble a single stop-message edition entry from the raw audit log
+   * row and the side data resolved by the caller. The mapper does not read
+   * the JSON payload itself - the service layer extracts and de-sanitizes
+   * the messages because the JSON parsing is shared with other future
+   * edition views.
+   *
+   * @param log             the underlying audit_log row of this edition
+   * @param authorName      display name resolved from the users aggregate,
+   *                        or null when the row is anonymous
+   * @param previousMessage value stored before this edition; null when
+   *                        this is the first known edition of the stop
+   * @param newMessage      value stored by this edition
+   * @return the edition DTO
+   */
+  public StopEditDTO toStopEditDTO(AuditLog log, String authorName, String previousMessage, String newMessage) {
+    return StopEditDTO.builder()
+        .editedAt(log.getTimestamp())
+        .authorId(log.getUserId())
+        .authorName(authorName)
+        .previousMessage(previousMessage)
+        .newMessage(newMessage)
         .build();
   }
 }

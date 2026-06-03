@@ -1,15 +1,25 @@
 package com.njplastic.njplastic_api.production.services;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.njplastic.njplastic_api.audit.entities.AuditLog;
+import com.njplastic.njplastic_api.audit.services.AuditService;
+import com.njplastic.njplastic_api.auth.entities.User;
+import com.njplastic.njplastic_api.auth.services.UserService;
+import com.njplastic.njplastic_api.production.dtos.StopEditDTO;
 import com.njplastic.njplastic_api.production.entities.Machine;
 import com.njplastic.njplastic_api.production.entities.MachineStatus;
 import com.njplastic.njplastic_api.production.enums.MachineState;
@@ -20,6 +30,10 @@ import com.njplastic.njplastic_api.production.exceptions.StopMessageNotEditableE
 import com.njplastic.njplastic_api.production.exceptions.StopNotFoundException;
 import com.njplastic.njplastic_api.production.repositories.MachineStatusRepository;
 import org.springframework.transaction.annotation.Transactional;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -39,6 +53,10 @@ import lombok.RequiredArgsConstructor;
 public class MachineStatusService {
 
   private final MachineStatusRepository machineStatusRepository;
+  private final AuditService auditService;
+  private final UserService userService;
+  private final ProductionDtoMapper mapper;
+  private final ObjectMapper objectMapper;
 
   /**
    * Current open status record for a machine, if any.
@@ -283,6 +301,82 @@ public class MachineStatusService {
       throw new MachineStatusPersistenceException(
           "Failed to edit auto-stop message " + stop.getId(), ex);
     }
+  }
+
+  /**
+   * Edition history of an AUTO_STOPPED message (UC12, RF18, RF19, RN12).
+   * The history is reconstructed from the append-only audit_log instead of
+   * a dedicated table: every {@code PUT
+   * /machines/{id}/stops/{stopId}/message} request was captured by the
+   * global AuditFilter (RF20), so the audit row already carries
+   * timestamp, author and the new message JSON. The {@code
+   * previousMessage} is resolved by a sliding window over the page plus a
+   * single lookup of the entry immediately preceding the page when needed.
+   *
+   * <p>The result is forcibly ordered by timestamp descending (most recent
+   * first) to match the dashboard rendering; the caller's {@code Sort}
+   * value is overridden.</p>
+   *
+   * @param machineId owning machine UUID
+   * @param stopId    target stop UUID
+   * @param pageable  paging info; sort is overridden to timestamp DESC
+   * @return page of {@link StopEditDTO} entries, oldest of the page at the
+   *         tail
+   * @throws StopNotFoundException when the stop does not exist or does not
+   *                               belong to the machine
+   */
+  public Page<StopEditDTO> findEditHistory(UUID machineId, UUID stopId, Pageable pageable) {
+    MachineStatus stop = machineStatusRepository.findById(stopId)
+        .orElseThrow(() -> new StopNotFoundException("Stop not found: " + stopId));
+    if (!stop.getMachineId().equals(machineId)) {
+      throw new StopNotFoundException("Stop " + stopId + " does not belong to machine " + machineId);
+    }
+
+    Pageable sorted = PageRequest.of(
+        pageable.getPageNumber(), pageable.getPageSize(),
+        Sort.by(Sort.Direction.DESC, "timestamp"));
+    Page<AuditLog> rawPage = auditService.findStopMessageEdits(machineId, stopId, sorted);
+    List<AuditLog> rows = rawPage.getContent();
+    if (rows.isEmpty()) {
+      return new PageImpl<>(List.of(), sorted, rawPage.getTotalElements());
+    }
+
+    String predecessorMessage = auditService
+        .findPreviousStopMessageEdit(machineId, stopId, rows.getLast().getTimestamp())
+        .map(this::extractMessageFromAudit)
+        .orElse(stop.getMessage());
+
+    List<StopEditDTO> entries = new ArrayList<>(rows.size());
+    for (int i = 0; i < rows.size(); i++) {
+      AuditLog log = rows.get(i);
+      String newMessage = extractMessageFromAudit(log);
+      String previousMessage = (i == rows.size() - 1)
+          ? predecessorMessage
+          : extractMessageFromAudit(rows.get(i + 1));
+      entries.add(mapper.toStopEditDTO(log, resolveAuthorName(log.getUserId()), previousMessage, newMessage));
+    }
+    return new PageImpl<>(entries, sorted, rawPage.getTotalElements());
+  }
+
+  private String extractMessageFromAudit(AuditLog log) {
+    String payload = log.getRequestPayload();
+    if (payload == null || payload.isBlank()) {
+      return null;
+    }
+    try {
+      JsonNode root = objectMapper.readTree(payload);
+      JsonNode message = root.get("message");
+      return message == null || message.isNull() ? null : message.asString();
+    } catch (JacksonException ex) {
+      return null;
+    }
+  }
+
+  private String resolveAuthorName(UUID authorId) {
+    if (authorId == null) {
+      return null;
+    }
+    return userService.findById(authorId).map(User::getName).orElse("(deleted user)");
   }
 
   /**
