@@ -121,4 +121,20 @@ class JwtTokenProviderTest {
   void expirationSeconds_isMinutesTimesSixty() {
     assertThat(provider.expirationSeconds()).isEqualTo(3600L);
   }
+
+  @Test
+  void refresh_emitsTokenWithSamePrincipalClaims() {
+    User user = user();
+    Claims original = provider.parse(provider.generate(user)).orElseThrow();
+    AuthenticatedUser principal = provider.toAuthenticatedUser(original).orElseThrow();
+
+    String refreshed = provider.refresh(principal);
+
+    Claims claims = provider.parse(refreshed).orElseThrow();
+    assertThat(claims.getSubject()).isEqualTo(user.getId().toString());
+    assertThat(claims.get("role", String.class)).isEqualTo("LEADER");
+    assertThat(claims.get("sector", String.class)).isEqualTo("INJECAO");
+    assertThat(claims.get("shift", String.class)).isEqualTo("TURNO_A");
+    assertThat(claims.getIssuer()).isEqualTo(ISSUER);
+  }
 }

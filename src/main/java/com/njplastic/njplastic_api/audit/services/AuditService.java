@@ -2,6 +2,7 @@ package com.njplastic.njplastic_api.audit.services;
 
 import java.time.OffsetDateTime;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -88,5 +89,47 @@ public class AuditService {
       return predicate;
     };
     return auditRepository.findAll(spec, pageable);
+  }
+
+  /**
+   * Edition history of an AUTO_STOPPED message reconstructed from the
+   * append-only audit trail (UC12, RF18, RF19, RN12). Filters on the exact
+   * endpoint prefix produced by {@code PUT
+   * /machines/{machineId}/stops/{stopId}/message} requests, keeping only the
+   * successful ones (HTTP 200), so failed attempts do not leak into the
+   * history shown to the user.
+   *
+   * @param machineId owning machine UUID, validated by the caller
+   * @param stopId    target stop UUID, validated by the caller
+   * @param pageable  paging/sort - the service forces a deterministic
+   *                  timestamp-descending order
+   * @return page of audit entries that materialized a stored edition
+   */
+  public Page<AuditLog> findStopMessageEdits(UUID machineId, UUID stopId, Pageable pageable) {
+    String prefix = buildStopMessageEndpointPrefix(machineId, stopId);
+    return auditRepository
+        .findByHttpMethodAndEndpointStartingWithAndHttpStatusOrderByTimestampDesc(
+            "PUT", prefix, 200, pageable);
+  }
+
+  /**
+   * Latest successful edition strictly before {@code before}. Used to
+   * resolve {@code previousMessage} for the oldest entry of a page, since
+   * that entry's predecessor lives outside the page.
+   *
+   * @param machineId owning machine UUID
+   * @param stopId    target stop UUID
+   * @param before    exclusive upper bound on the captured timestamp
+   * @return the predecessor entry, or empty when none exists
+   */
+  public Optional<AuditLog> findPreviousStopMessageEdit(UUID machineId, UUID stopId, OffsetDateTime before) {
+    String prefix = buildStopMessageEndpointPrefix(machineId, stopId);
+    return auditRepository
+        .findTopByHttpMethodAndEndpointStartingWithAndHttpStatusAndTimestampBeforeOrderByTimestampDesc(
+            "PUT", prefix, 200, before);
+  }
+
+  private String buildStopMessageEndpointPrefix(UUID machineId, UUID stopId) {
+    return "/machines/" + machineId + "/stops/" + stopId + "/message";
   }
 }

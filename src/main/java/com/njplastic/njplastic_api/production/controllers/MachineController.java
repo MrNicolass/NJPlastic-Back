@@ -35,6 +35,7 @@ import com.njplastic.njplastic_api.production.dtos.OeeResultDTO;
 import com.njplastic.njplastic_api.production.dtos.ProductionCycleResponseDTO;
 import com.njplastic.njplastic_api.production.dtos.QualityRegistrationRequestDTO;
 import com.njplastic.njplastic_api.production.dtos.RegisterPauseRequestDTO;
+import com.njplastic.njplastic_api.production.dtos.StopEditDTO;
 import com.njplastic.njplastic_api.production.entities.Machine;
 import com.njplastic.njplastic_api.production.entities.MachineStatus;
 import com.njplastic.njplastic_api.production.entities.QualityRecord;
@@ -179,6 +180,24 @@ public class MachineController {
     MachineStatus updated = machineStatusService.editAutoStopMessage(
         machineId, stopId, request.getMessage(), principal.id());
     return mapper.toStatusEntry(updated);
+  }
+
+  @GetMapping("/{machineId}/stops/{stopId}/edits")
+  @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')")
+  @Operation(summary = "Edition history of an AUTO_STOPPED message (UC12, RN12)", description = "Backs the Histórico de edições block of the Modal_Change_Stop mockups (Líder/Gestor). Reconstructed from audit_log; no dedicated persistence. Sort is forced to timestamp DESC.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Page of edition entries (newest first)", content = @Content(schema = @Schema(implementation = StopEditDTO.class))),
+      @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Machine is outside the caller scope", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "404", description = "Unknown machine or stop id", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  })
+  public Page<StopEditDTO> getStopEditHistory(
+      @PathVariable UUID machineId,
+      @PathVariable UUID stopId,
+      @PageableDefault(size = 20) Pageable pageable,
+      @AuthenticationPrincipal AuthenticatedUser principal) {
+    machineService.requireAccessible(machineId, principal);
+    return machineStatusService.findEditHistory(machineId, stopId, pageable);
   }
 
   @GetMapping("/{machineId}/oee")

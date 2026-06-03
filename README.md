@@ -49,8 +49,8 @@ Service endpoints once running:
 | Backend REST | http://localhost:8111 |
 | Swagger UI | http://localhost:8111/swagger-ui.html |
 | OpenAPI JSON | http://localhost:8111/v3/api-docs |
-| PostgreSQL (app) | localhost:8125 (db `njplastic`, user `admin`) |
-| PostgreSQL (ERP mock) | localhost:8126 (db `meplas_erp`, user `meplas`) |
+| PostgreSQL (app) | localhost:8025 (db `njplastic`, user `admin`) |
+| PostgreSQL (ERP mock) | localhost:8026 (db `meplas_erp`, user `meplas`) |
 | Mosquitto MQTT | localhost:1883 (anonymous, single topic `njplastic/pulso`) |
 
 The Compose file ships with the `dev` Spring profile and the local default credentials wired in. Override anything via `environment:` entries or a `.env` file alongside the compose.
@@ -73,7 +73,7 @@ The `dev` profile loads the additional Flyway location `db/migration-dev` which 
 | Profile | When to use | What it does |
 |---------|-------------|--------------|
 | (none) | Library / test defaults | Reads `application.properties` placeholders; all secrets fall back to local defaults. |
-| `dev` | Local development | Adds dev seed users, permissive CORS, relaxed JWT secret, points the ERP datasource at the local mock on port 8126. |
+| `dev` | Local development | Adds dev seed users, permissive CORS, relaxed JWT secret, points the ERP datasource at the local mock on port 8026. |
 | `prod` | Real deployments | Requires `JWT_SECRET` and `CORS_ALLOWED_ORIGINS` to be set in the environment (startup fails fast otherwise). Disables devtools and the dev-only Flyway location. |
 
 ## Environment Variables
@@ -93,7 +93,7 @@ All settings are exposed as `${VAR:default}` in `application.properties`. The ta
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `POSTGRES_URL` | `jdbc:postgresql://localhost:8125/njplastic` | Application DB. |
+| `POSTGRES_URL` | `jdbc:postgresql://localhost:8025/njplastic` | Application DB. |
 | `POSTGRES_USER` | `admin` | Application DB user. |
 | `POSTGRES_PASSWORD` | `admin` | Application DB password. |
 | `HIKARI_MAX_POOL_SIZE` | `30` | Max pool size for the application DB. |
