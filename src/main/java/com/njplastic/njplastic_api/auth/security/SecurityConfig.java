@@ -51,7 +51,8 @@ import jakarta.servlet.http.HttpServletResponse;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
-@EnableConfigurationProperties({ JwtProperties.class, CorsProperties.class, SecurityProperties.class })
+@EnableConfigurationProperties({ JwtProperties.class, CorsProperties.class, SecurityProperties.class,
+    CookieProperties.class })
 public class SecurityConfig {
 
   private final ObjectMapper objectMapper;

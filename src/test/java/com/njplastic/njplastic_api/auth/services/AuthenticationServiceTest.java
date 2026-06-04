@@ -20,10 +20,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.njplastic.njplastic_api.auth.dtos.LoginRequestDTO;
-import com.njplastic.njplastic_api.auth.dtos.LoginResponseDTO;
 import com.njplastic.njplastic_api.auth.entities.User;
 import com.njplastic.njplastic_api.auth.enums.UserRole;
 import com.njplastic.njplastic_api.auth.exceptions.InvalidCredentialsException;
+import com.njplastic.njplastic_api.auth.security.IssuedToken;
 import com.njplastic.njplastic_api.auth.security.JwtTokenProvider;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,17 +58,19 @@ class AuthenticationServiceTest {
 
   @Test
   void authenticate_returnsTokenWhenCredentialsValid() {
+    IssuedToken issued = new IssuedToken("jwt-token", 1_700_000_000L);
     when(userService.findActiveByLogin("manager")).thenReturn(Optional.of(user));
     when(passwordEncoder.matches("manager-dev-123", "hash")).thenReturn(true);
-    when(tokenProvider.generate(user)).thenReturn("jwt-token");
+    when(tokenProvider.generate(user)).thenReturn(issued);
     when(tokenProvider.expirationSeconds()).thenReturn(3600L);
 
-    LoginResponseDTO response = authenticationService.authenticate(request);
+    AuthenticationResult result = authenticationService.authenticate(request);
 
-    assertThat(response.getToken()).isEqualTo("jwt-token");
-    assertThat(response.getTokenType()).isEqualTo("Bearer");
-    assertThat(response.getExpiresInSeconds()).isEqualTo(3600L);
-    assertThat(response.getUser().getLogin()).isEqualTo("manager");
+    assertThat(result.response().getToken()).isEqualTo("jwt-token");
+    assertThat(result.response().getTokenType()).isEqualTo("Bearer");
+    assertThat(result.response().getExpiresInSeconds()).isEqualTo(3600L);
+    assertThat(result.response().getUser().getLogin()).isEqualTo("manager");
+    assertThat(result.issued()).isSameAs(issued);
   }
 
   @Test

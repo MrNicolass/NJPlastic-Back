@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -53,9 +54,9 @@ class JwtTokenProviderTest {
   @Test
   void generateThenParse_roundTripsClaims() {
     User user = user();
-    String token = provider.generate(user);
+    IssuedToken issued = provider.generate(user);
 
-    Optional<Claims> parsed = provider.parse(token);
+    Optional<Claims> parsed = provider.parse(issued.compact());
     assertThat(parsed).isPresent();
     Claims claims = parsed.get();
     assertThat(claims.getSubject()).isEqualTo(user.getId().toString());
@@ -66,6 +67,19 @@ class JwtTokenProviderTest {
   }
 
   @Test
+  void generate_expEpochSecondsMatchesJwtExpClaim() {
+    long before = Instant.now().getEpochSecond();
+    IssuedToken issued = provider.generate(user());
+    long after = Instant.now().getEpochSecond();
+
+    Claims claims = provider.parse(issued.compact()).orElseThrow();
+    long jwtExp = claims.getExpiration().toInstant().getEpochSecond();
+
+    assertThat(issued.expEpochSeconds()).isEqualTo(jwtExp);
+    assertThat(issued.expEpochSeconds()).isBetween(before + 3600, after + 3600);
+  }
+
+  @Test
   void parse_returnsEmptyForGarbage() {
     assertThat(provider.parse("not-a-jwt")).isEmpty();
   }
@@ -73,22 +87,22 @@ class JwtTokenProviderTest {
   @Test
   void parse_returnsEmptyForWrongIssuer() {
     JwtTokenProvider other = new JwtTokenProvider(new JwtProperties(SECRET, 60, "OtherIssuer"));
-    String token = other.generate(user());
-    assertThat(provider.parse(token)).isEmpty();
+    IssuedToken issued = other.generate(user());
+    assertThat(provider.parse(issued.compact())).isEmpty();
   }
 
   @Test
   void parse_returnsEmptyForWrongSigningKey() {
     JwtTokenProvider other = new JwtTokenProvider(
         new JwtProperties(SECRET.replace('t', 'x'), 60, ISSUER));
-    String token = other.generate(user());
-    assertThat(provider.parse(token)).isEmpty();
+    IssuedToken issued = other.generate(user());
+    assertThat(provider.parse(issued.compact())).isEmpty();
   }
 
   @Test
   void toAuthenticatedUser_mapsValidClaims() {
     User user = user();
-    Claims claims = provider.parse(provider.generate(user)).orElseThrow();
+    Claims claims = provider.parse(provider.generate(user).compact()).orElseThrow();
 
     Optional<AuthenticatedUser> result = provider.toAuthenticatedUser(claims);
     assertThat(result).isPresent();
@@ -125,16 +139,28 @@ class JwtTokenProviderTest {
   @Test
   void refresh_emitsTokenWithSamePrincipalClaims() {
     User user = user();
-    Claims original = provider.parse(provider.generate(user)).orElseThrow();
+    Claims original = provider.parse(provider.generate(user).compact()).orElseThrow();
     AuthenticatedUser principal = provider.toAuthenticatedUser(original).orElseThrow();
 
-    String refreshed = provider.refresh(principal);
+    IssuedToken refreshed = provider.refresh(principal);
 
-    Claims claims = provider.parse(refreshed).orElseThrow();
+    Claims claims = provider.parse(refreshed.compact()).orElseThrow();
     assertThat(claims.getSubject()).isEqualTo(user.getId().toString());
     assertThat(claims.get("role", String.class)).isEqualTo("LEADER");
     assertThat(claims.get("sector", String.class)).isEqualTo("INJECAO");
     assertThat(claims.get("shift", String.class)).isEqualTo("TURNO_A");
     assertThat(claims.getIssuer()).isEqualTo(ISSUER);
+  }
+
+  @Test
+  void refresh_expEpochSecondsMatchesJwtExpClaim() {
+    AuthenticatedUser principal = new AuthenticatedUser(
+        UUID.randomUUID(), null, UserRole.MANAGER, "INJECAO", "TURNO_A");
+
+    IssuedToken refreshed = provider.refresh(principal);
+
+    long jwtExp = provider.parse(refreshed.compact()).orElseThrow()
+        .getExpiration().toInstant().getEpochSecond();
+    assertThat(refreshed.expEpochSeconds()).isEqualTo(jwtExp);
   }
 }

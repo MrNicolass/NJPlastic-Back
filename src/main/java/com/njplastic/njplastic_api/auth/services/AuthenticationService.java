@@ -10,6 +10,7 @@ import com.njplastic.njplastic_api.auth.dtos.LoginResponseDTO;
 import com.njplastic.njplastic_api.auth.dtos.UserSummaryDTO;
 import com.njplastic.njplastic_api.auth.entities.User;
 import com.njplastic.njplastic_api.auth.exceptions.InvalidCredentialsException;
+import com.njplastic.njplastic_api.auth.security.IssuedToken;
 import com.njplastic.njplastic_api.auth.security.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -37,9 +38,11 @@ public class AuthenticationService {
    * passwords, preventing user enumeration via timing (RFC §3.2.1 / OWASP A07).
    *
    * @param request the login credentials
-   * @return the issued token and user summary
+   * @return the JSON response paired with the issued token (compact + exp) so
+   *         the controller can mirror the exp into the {@code access_token_exp}
+   *         cookie alongside the {@code access_token} httpOnly cookie
    */
-  public LoginResponseDTO authenticate(LoginRequestDTO request) {
+  public AuthenticationResult authenticate(LoginRequestDTO request) {
     Optional<User> userOpt = userService.findActiveByLogin(request.getLogin());
     String hash = userOpt.map(User::getPasswordHash).orElse(DUMMY_HASH);
     boolean matches = passwordEncoder.matches(request.getPassword(), hash);
@@ -49,12 +52,13 @@ public class AuthenticationService {
     }
 
     User user = userOpt.get();
-    String token = tokenProvider.generate(user);
-    return LoginResponseDTO.builder()
-        .token(token)
+    IssuedToken issued = tokenProvider.generate(user);
+    LoginResponseDTO response = LoginResponseDTO.builder()
+        .token(issued.compact())
         .tokenType("Bearer")
         .expiresInSeconds(tokenProvider.expirationSeconds())
         .user(UserSummaryDTO.from(user))
         .build();
+    return new AuthenticationResult(response, issued);
   }
 }
