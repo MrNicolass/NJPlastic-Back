@@ -46,12 +46,14 @@ public class JwtTokenProvider {
 
   /**
    * Generate an HS256 JWT carrying the user identity and authorization scope.
-   * Returns the compact serialization (xxx.yyy.zzz).
+   * Returns the compact serialization together with the same {@code exp}
+   * (UNIX epoch seconds) baked into the token, so the caller can mirror it to
+   * the {@code access_token_exp} cookie without re-parsing.
    */
-  public String generate(User user) {
+  public IssuedToken generate(User user) {
     Instant now = Instant.now();
     Instant exp = now.plusSeconds(expirationMinutes * 60);
-    return Jwts.builder()
+    String compact = Jwts.builder()
         .issuer(issuer)
         .subject(user.getId().toString())
         .issuedAt(Date.from(now))
@@ -61,6 +63,7 @@ public class JwtTokenProvider {
         .claim(CLAIM_SHIFT, user.getShift())
         .signWith(signingKey, Jwts.SIG.HS256)
         .compact();
+    return new IssuedToken(compact, exp.getEpochSecond());
   }
 
   /**
@@ -106,12 +109,12 @@ public class JwtTokenProvider {
    * without forcing a re-login or holding a separate refresh-token store.
    *
    * @param principal authenticated user resolved from the current JWT
-   * @return new compact HS256 token with fresh issuedAt/expiration
+   * @return new compact HS256 token paired with its UNIX exp
    */
-  public String refresh(AuthenticatedUser principal) {
+  public IssuedToken refresh(AuthenticatedUser principal) {
     Instant now = Instant.now();
     Instant exp = now.plusSeconds(expirationMinutes * 60);
-    return Jwts.builder()
+    String compact = Jwts.builder()
         .issuer(issuer)
         .subject(principal.id().toString())
         .issuedAt(Date.from(now))
@@ -121,6 +124,7 @@ public class JwtTokenProvider {
         .claim(CLAIM_SHIFT, principal.shift())
         .signWith(signingKey, Jwts.SIG.HS256)
         .compact();
+    return new IssuedToken(compact, exp.getEpochSecond());
   }
 
   public long expirationSeconds() {
