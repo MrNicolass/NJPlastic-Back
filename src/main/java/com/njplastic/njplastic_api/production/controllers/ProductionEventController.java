@@ -1,6 +1,7 @@
 package com.njplastic.njplastic_api.production.controllers;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -22,11 +23,13 @@ import com.njplastic.njplastic_api.auth.security.AuthenticatedUser;
 import com.njplastic.njplastic_api.common.dtos.ErrorResponseDTO;
 import com.njplastic.njplastic_api.production.dtos.EventRequestDTO;
 import com.njplastic.njplastic_api.production.dtos.EventResponseDTO;
+import com.njplastic.njplastic_api.production.dtos.RecentEventDTO;
 import com.njplastic.njplastic_api.production.entities.ProductionEvent;
 import com.njplastic.njplastic_api.production.services.MachineService;
 import com.njplastic.njplastic_api.production.services.ProductionEventService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -92,5 +95,31 @@ public class ProductionEventController {
       @AuthenticationPrincipal AuthenticatedUser principal) {
     machineService.requireAccessible(machineId, principal);
     return eventService.findPaged(machineId, from, to, pageable).map(EventResponseDTO::from);
+  }
+
+  @GetMapping("/events/recent")
+  @PreAuthorize("hasAnyRole('LEADER','MANAGER')")
+  @Operation(summary = "Aggregated 'Eventos recentes' feed for the Leader dashboard",
+      description = "Merges manual events, manual pauses, auto stops and stop-message edits across the accessible machines (RN02-RN04). Defaults to the last 4 hours when from/to are omitted; results are ordered by timestamp DESC and capped at limit. Backs the right column of mockup Dashboard_Part2_V1 (EP-FE-05).")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Aggregated feed entries",
+          content = @Content(array = @ArraySchema(schema = @Schema(implementation = RecentEventDTO.class)))),
+      @ApiResponse(responseCode = "400", description = "Invalid limit or window parameters",
+          content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "401", description = "Missing or invalid JWT",
+          content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Caller role is not allowed on this endpoint",
+          content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  })
+  public List<RecentEventDTO> getRecent(
+      @RequestParam(defaultValue = "50") int limit,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime from,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime to,
+      @AuthenticationPrincipal AuthenticatedUser principal) {
+    int safeLimit = Math.max(1, Math.min(200, limit));
+    OffsetDateTime now = OffsetDateTime.now();
+    OffsetDateTime resolvedTo = to != null ? to : now;
+    OffsetDateTime resolvedFrom = from != null ? from : resolvedTo.minusHours(4);
+    return eventService.findRecent(principal, safeLimit, resolvedFrom, resolvedTo);
   }
 }

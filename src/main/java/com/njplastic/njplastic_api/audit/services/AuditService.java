@@ -1,6 +1,7 @@
 package com.njplastic.njplastic_api.audit.services;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
@@ -131,5 +132,18 @@ public class AuditService {
 
   private String buildStopMessageEndpointPrefix(UUID machineId, UUID stopId) {
     return "/machines/" + machineId + "/stops/" + stopId + "/message";
+  }
+
+  /**
+   * Successful stop-message edits captured in the given window across every
+   * machine, ordered by timestamp descending. Backs the Leader "Eventos
+   * recentes" feed (EP-FE-05, RFC §7.3.2 EP-FE-05 item 6).
+   *
+   * @param from inclusive lower bound on timestamp
+   * @param to   exclusive upper bound on timestamp
+   * @return matching audit entries
+   */
+  public List<AuditLog> findStopMessageEditsInWindow(OffsetDateTime from, OffsetDateTime to) {
+    return auditRepository.findStopMessageEditsInWindow(from, to);
   }
 }

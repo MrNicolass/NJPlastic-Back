@@ -1,6 +1,8 @@
 package com.njplastic.njplastic_api.production.repositories;
 
 import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -16,4 +18,7 @@ public interface ProductionEventRepository extends JpaRepository<ProductionEvent
   Page<ProductionEvent> findByMachineIdAndStartedAtBetween(UUID machineId, OffsetDateTime from, OffsetDateTime to, Pageable pageable);
 
   Page<ProductionEvent> findByMachineId(UUID machineId, Pageable pageable);
+
+  List<ProductionEvent> findByMachineIdInAndStartedAtBetweenOrderByStartedAtDesc(
+      Collection<UUID> machineIds, OffsetDateTime from, OffsetDateTime to);
 }
