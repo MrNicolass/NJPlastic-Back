@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.dao.DataAccessException;
@@ -377,6 +378,28 @@ public class MachineStatusService {
       return null;
     }
     return userService.findById(authorId).map(User::getName).orElse("(deleted user)");
+  }
+
+  /**
+   * Status records whose {@code startTime} falls in {@code [from, to)}, scoped
+   * to a set of accessible machines and a set of operational states. Sole
+   * caller is the Leader "Eventos recentes" feed (EP-FE-05, RFC §7.3.2 item 6);
+   * the order is forced by the repository so the consumer can merge with other
+   * sources by timestamp without re-sorting per source.
+   *
+   * @param machineIds accessible machines for the principal (RN02-RN04)
+   * @param states     operational states to include (typically PAUSED and AUTO_STOPPED)
+   * @param from       inclusive lower bound on startTime
+   * @param to         exclusive upper bound on startTime
+   * @return matching records ordered by startTime descending
+   */
+  public List<MachineStatus> findRecentStatusChanges(Set<UUID> machineIds,
+      Collection<MachineState> states, OffsetDateTime from, OffsetDateTime to) {
+    if (machineIds == null || machineIds.isEmpty() || states == null || states.isEmpty()) {
+      return List.of();
+    }
+    return machineStatusRepository
+        .findByMachineIdInAndStateInAndStartTimeBetweenOrderByStartTimeDesc(machineIds, states, from, to);
   }
 
   /**
