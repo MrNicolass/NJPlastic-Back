@@ -115,7 +115,7 @@ public class SecurityConfig {
       cfg.setAllowedOrigins(origins);
     }
     cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-    cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+    cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Request-Id"));
     cfg.setExposedHeaders(List.of("Authorization"));
     cfg.setAllowCredentials(true);
     cfg.setMaxAge(3600L);
