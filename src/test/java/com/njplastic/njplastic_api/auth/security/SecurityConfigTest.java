@@ -65,7 +65,7 @@ class SecurityConfigTest {
     assertThat(cfg.getAllowedOrigins()).containsExactly("https://app.njplastic.com");
     assertThat(cfg.getAllowedMethods())
         .containsExactly("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS");
-    assertThat(cfg.getAllowedHeaders()).containsExactly("Authorization", "Content-Type", "Accept");
+    assertThat(cfg.getAllowedHeaders()).containsExactly("Authorization", "Content-Type", "Accept", "X-Request-Id");
     assertThat(cfg.getExposedHeaders()).containsExactly("Authorization");
     assertThat(cfg.getAllowCredentials()).isTrue();
     assertThat(cfg.getMaxAge()).isEqualTo(3600L);

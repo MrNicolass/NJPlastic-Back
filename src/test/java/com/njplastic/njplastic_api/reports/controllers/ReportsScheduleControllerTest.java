@@ -39,6 +39,7 @@ import com.njplastic.njplastic_api.reports.entities.ReportHistory;
 import com.njplastic.njplastic_api.reports.entities.ReportSchedule;
 import com.njplastic.njplastic_api.reports.enums.ReportFormat;
 import com.njplastic.njplastic_api.reports.enums.ReportType;
+import com.njplastic.njplastic_api.reports.services.ReportDownloadService;
 import com.njplastic.njplastic_api.reports.services.ReportScheduleService;
 
 @WebMvcTest(ReportsScheduleController.class)
@@ -52,6 +53,9 @@ class ReportsScheduleControllerTest {
 
   @MockitoBean
   private ReportScheduleService service;
+
+  @MockitoBean
+  private ReportDownloadService downloadService;
 
   private static final UUID PRINCIPAL_ID = UUID.fromString("3f1c2b9e-7a4d-4e2a-9b8c-1d2e3f4a5b6c");
 
