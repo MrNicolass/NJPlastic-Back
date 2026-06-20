@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
  * check
  * (re)connects and (re)subscribes once it becomes reachable, so the application
  * can
- * boot without a broker in dev/CI (RFC §5.3).
+ * boot without a broker in dev/CI.
  */
 @Component
 @RequiredArgsConstructor

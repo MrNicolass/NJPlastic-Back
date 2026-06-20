@@ -50,10 +50,10 @@ public class ReportHistoryResponseDTO {
   @Schema(description = "Size of the artifact in bytes", example = "4096", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private long sizeBytes;
 
-  /**
-   * @param entity source row
-   * @return populated DTO
-   */
+ /**
+ * @param entity source row
+ * @return populated DTO
+ */
   public static ReportHistoryResponseDTO from(ReportHistory entity) {
     return ReportHistoryResponseDTO.builder()
         .id(entity.getId())

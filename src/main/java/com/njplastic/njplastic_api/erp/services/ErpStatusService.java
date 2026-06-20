@@ -20,7 +20,7 @@ import com.njplastic.njplastic_api.erp.enums.ErpSyncStatus;
 import com.njplastic.njplastic_api.erp.repositories.ErpSyncRunRepository;
 
 /**
- * Aggregates erp_sync_run into the KPI payload consumed by UC08
+ * Aggregates erp_sync_run into the KPI payload consumed by 
  * (GET /erp/sync/status). Stays available even when
  * {@code app.datasource.erp.enabled=false} so the Gestor screen can confirm the
  * disabled state - in that case the response carries
@@ -49,14 +49,14 @@ public class ErpStatusService {
     this.kpiWindowHours = kpiWindowHours;
   }
 
-  /**
-   * Build the aggregated status payload for UC08. Returns
-   * {@link ErpConnectionStatus#DISABLED} top-level status when the ERP
-   * datasource flag is off; otherwise derives the connection state from the
-   * most recent run.
-   *
-   * @return the aggregated KPI payload
-   */
+ /**
+ * Build the aggregated status payload for the ERP screen. Returns
+ * {@link ErpConnectionStatus#DISABLED} top-level status when the ERP
+ * datasource flag is off; otherwise derives the connection state from the
+ * most recent run.
+ *
+ * @return the aggregated KPI payload
+ */
   public ErpSyncStatusResponseDTO buildStatus() {
     Optional<ErpSyncRun> latest = syncRunRepository.findTopByOrderByStartedAtDesc();
     List<ErpSyncRun> recent = syncRunRepository

@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Single-use password reset token (EP-BE-02 reopened). Maps to the
+ * Single-use password reset token (reopened). Maps to the
  * password_reset_token table created by V7__password_reset_token.sql. The
  * raw {@code token} is stored verbatim because TTL is short; consumed tokens
  * are marked via {@code usedAt} instead of being deleted, so audit can trace

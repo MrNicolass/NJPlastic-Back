@@ -10,7 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Centralizes the emission of the EP-FE-02 dual-cookie pair (httpOnly
+ * Centralizes the emission of the dual-cookie pair (httpOnly
  * {@code access_token} + JS-readable {@code access_token_exp}) so login,
  * refresh and logout flows stay in sync on attributes (path, sameSite, secure).
  * Logout reuses the same factory to clear both cookies with {@code Max-Age=0}.
@@ -26,15 +26,15 @@ public class CookieFactory {
 
   private final CookieProperties cookieProperties;
 
-  /**
-   * Emit the dual cookies that back the EP-FE-02 authentication contract.
-   * Uses {@code addHeader} so the two {@code Set-Cookie} headers coexist on the
-   * response.
-   *
-   * @param response       servlet response receiving the headers
-   * @param issued         compact JWT plus its embedded exp (epoch seconds)
-   * @param maxAgeSeconds  cookie lifetime, matched to the JWT exp
-   */
+ /**
+ * Emit the dual cookies that back the authentication contract.
+ * Uses {@code addHeader} so the two {@code Set-Cookie} headers coexist on the
+ * response.
+ *
+ * @param response servlet response receiving the headers
+ * @param issued compact JWT plus its embedded exp (epoch seconds)
+ * @param maxAgeSeconds cookie lifetime, matched to the JWT exp
+ */
   public void writeAuthCookies(HttpServletResponse response, IssuedToken issued, long maxAgeSeconds) {
     Duration maxAge = Duration.ofSeconds(maxAgeSeconds);
     boolean secure = cookieProperties.secure();
@@ -58,14 +58,14 @@ public class CookieFactory {
     response.addHeader(HttpHeaders.SET_COOKIE, accessTokenExp.toString());
   }
 
-  /**
-   * Emit empty cookies with {@code Max-Age=0} so the browser drops both
-   * {@code access_token} (httpOnly, unreachable from JS) and
-   * {@code access_token_exp}. Mirrors the attributes used on issuance so the
-   * browser matches and removes the original cookie entries.
-   *
-   * @param response servlet response receiving the clearing headers
-   */
+ /**
+ * Emit empty cookies with {@code Max-Age=0} so the browser drops both
+ * {@code access_token} (httpOnly, unreachable from JS) and
+ * {@code access_token_exp}. Mirrors the attributes used on issuance so the
+ * browser matches and removes the original cookie entries.
+ *
+ * @param response servlet response receiving the clearing headers
+ */
   public void clearAuthCookies(HttpServletResponse response) {
     boolean secure = cookieProperties.secure();
 

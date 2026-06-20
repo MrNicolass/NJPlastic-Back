@@ -124,6 +124,7 @@ class MachineControllerTest {
     when(machineStatusService.findWindow(MACHINE_ID, from, to)).thenReturn(List.of(open));
     when(mapper.toStatusEntries(List.of(open))).thenReturn(List.of(entry));
     when(mapper.toStatusEntry(open)).thenReturn(entry);
+    when(productionService.countConfirmedCycles(MACHINE_ID, from, to)).thenReturn(420L);
 
     mockMvc.perform(get("/machines/{id}/status", MACHINE_ID)
             .param("from", "2026-05-28T06:00:00Z")
@@ -131,7 +132,8 @@ class MachineControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.machineId").value(MACHINE_ID.toString()))
         .andExpect(jsonPath("$.currentState").value("RUNNING"))
-        .andExpect(jsonPath("$.timeline.length()").value(1));
+        .andExpect(jsonPath("$.timeline.length()").value(1))
+        .andExpect(jsonPath("$.cyclesInWindow").value(420));
   }
 
   @Test

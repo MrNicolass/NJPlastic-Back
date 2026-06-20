@@ -5,7 +5,7 @@ import com.njplastic.njplastic_api.config.exceptions.BaseApiUnauthorizedExceptio
 /**
  * Thrown by {@code AuthenticationService} for every login failure - unknown
  * login, inactive user, or wrong password. The message is fixed and identical
- * across all paths to prevent user enumeration (RFC §3.2.1 / OWASP A07).
+ * across all paths to prevent user enumeration (OWASP A07).
  */
 public class InvalidCredentialsException extends BaseApiUnauthorizedException {
 

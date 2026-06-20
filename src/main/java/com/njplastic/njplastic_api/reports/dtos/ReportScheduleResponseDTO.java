@@ -56,10 +56,10 @@ public class ReportScheduleResponseDTO {
   @Schema(description = "Creation timestamp", example = "2026-06-01T08:30:00Z", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private OffsetDateTime createdAt;
 
-  /**
-   * @param entity source entity
-   * @return populated DTO
-   */
+ /**
+ * @param entity source entity
+ * @return populated DTO
+ */
   public static ReportScheduleResponseDTO from(ReportSchedule entity) {
     return ReportScheduleResponseDTO.builder()
         .id(entity.getId())

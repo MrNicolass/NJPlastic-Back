@@ -21,7 +21,7 @@ import lombok.Setter;
  * verbatim from the database - they were already sanitized at write time by
  * {@code PayloadSanitizer}, so the read path does not redact a second time.
  */
-@Schema(description = "Audit trail projection (EP-BE-08 / RF20)")
+@Schema(description = "Audit trail projection ")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -59,10 +59,10 @@ public class AuditLogResponseDTO {
   @Schema(description = "Total request processing time in milliseconds", example = "42", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
   private Integer durationMs;
 
-  /**
-   * @param entity source audit entry
-   * @return populated DTO
-   */
+ /**
+ * @param entity source audit entry
+ * @return populated DTO
+ */
   public static AuditLogResponseDTO from(AuditLog entity) {
     return AuditLogResponseDTO.builder()
         .id(entity.getId())

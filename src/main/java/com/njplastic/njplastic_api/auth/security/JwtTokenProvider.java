@@ -17,7 +17,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
 /**
- * Issues and validates HS256 JWTs (RFC §6.2 / RFC 7519). The signing key is
+ * Issues and validates HS256 JWTs (RFC 7519). The signing key is
  * loaded once at construction; tokens with "alg=none" or any algorithm other
  * than HS256 are rejected by jjwt's strict parser (OWASP A02).
  */
@@ -44,12 +44,12 @@ public class JwtTokenProvider {
     this.issuer = properties.issuer();
   }
 
-  /**
-   * Generate an HS256 JWT carrying the user identity and authorization scope.
-   * Returns the compact serialization together with the same {@code exp}
-   * (UNIX epoch seconds) baked into the token, so the caller can mirror it to
-   * the {@code access_token_exp} cookie without re-parsing.
-   */
+ /**
+ * Generate an HS256 JWT carrying the user identity and authorization scope.
+ * Returns the compact serialization together with the same {@code exp}
+ * (UNIX epoch seconds) baked into the token, so the caller can mirror it to
+ * the {@code access_token_exp} cookie without re-parsing.
+ */
   public IssuedToken generate(User user) {
     Instant now = Instant.now();
     Instant exp = now.plusSeconds(expirationMinutes * 60);
@@ -66,11 +66,11 @@ public class JwtTokenProvider {
     return new IssuedToken(compact, exp.getEpochSecond());
   }
 
-  /**
-   * Parse and validate a compact JWT. Returns Optional.empty() for any
-   * signature/format/expiration failure. Callers never see the underlying
-   * exception type, preventing leakage of which check failed.
-   */
+ /**
+ * Parse and validate a compact JWT. Returns Optional.empty for any
+ * signature/format/expiration failure. Callers never see the underlying
+ * exception type, preventing leakage of which check failed.
+ */
   public Optional<Claims> parse(String token) {
     try {
       Claims claims = Jwts.parser()
@@ -85,11 +85,11 @@ public class JwtTokenProvider {
     }
   }
 
-  /**
-   * Lift a validated Claims set into the principal stored in the
-   * SecurityContext. The role claim is required; missing or unknown values
-   * make the token unusable.
-   */
+ /**
+ * Lift a validated Claims set into the principal stored in the
+ * SecurityContext. The role claim is required; missing or unknown values
+ * make the token unusable.
+ */
   public Optional<AuthenticatedUser> toAuthenticatedUser(Claims claims) {
     try {
       UUID id = UUID.fromString(claims.getSubject());
@@ -102,15 +102,15 @@ public class JwtTokenProvider {
     }
   }
 
-  /**
-   * Issue a fresh token carrying the same claims as the supplied principal.
-   * Used by {@code POST /auth/refresh} (EP-BE-02 reopened) - the frontend
-   * dispatches this ~5 min before {@code exp}, keeping the user signed in
-   * without forcing a re-login or holding a separate refresh-token store.
-   *
-   * @param principal authenticated user resolved from the current JWT
-   * @return new compact HS256 token paired with its UNIX exp
-   */
+ /**
+ * Issue a fresh token carrying the same claims as the supplied principal.
+ * Used by {@code POST /auth/refresh} (reopened) - the frontend
+ * dispatches this ~5 min before {@code exp}, keeping the user signed in
+ * without forcing a re-login or holding a separate refresh-token store.
+ *
+ * @param principal authenticated user resolved from the current JWT
+ * @return new compact HS256 token paired with its UNIX exp
+ */
   public IssuedToken refresh(AuthenticatedUser principal) {
     Instant now = Instant.now();
     Instant exp = now.plusSeconds(expirationMinutes * 60);

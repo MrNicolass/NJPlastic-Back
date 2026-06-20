@@ -23,8 +23,8 @@ import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Owns access to {@link ProductionOrderCacheRepository} (EP-BE-08 sub-task 3).
- * Reads are scoped per RN02-RN04: MANAGER sees every cached order; OPERATOR
+ * Owns access to {@link ProductionOrderCacheRepository} (sub-task 3).
+ * Reads are scoped per : MANAGER sees every cached order; OPERATOR
  * and LEADER only see orders bound to machines in their sector (resolved via
  * {@link MachineService#findAccessible}).
  */
@@ -39,17 +39,17 @@ public class ProductionOrderService {
   private final ProductionOrderCacheRepository repository;
   private final MachineService machineService;
 
-  /**
-   * Paginated read of cached production orders, optionally filtered.
-   *
-   * @param status    optional ERP status (exact match, case-insensitive)
-   * @param machineId optional machine filter; ignored when null
-   * @param from      optional inclusive lower bound on lastSyncAt
-   * @param to        optional inclusive upper bound on lastSyncAt
-   * @param principal authenticated user used to scope by sector
-   * @param pageable  paging/sort
-   * @return page of cached orders
-   */
+ /**
+ * Paginated read of cached production orders, optionally filtered.
+ *
+ * @param status optional ERP status (exact match, case-insensitive)
+ * @param machineId optional machine filter; ignored when null
+ * @param from optional inclusive lower bound on lastSyncAt
+ * @param to optional inclusive upper bound on lastSyncAt
+ * @param principal authenticated user used to scope by sector
+ * @param pageable paging/sort
+ * @return page of cached orders
+ */
   public Page<ProductionOrderCache> findPaged(String status, UUID machineId, OffsetDateTime from, OffsetDateTime to,
       AuthenticatedUser principal, Pageable pageable) {
     Set<UUID> allowedMachineIds = resolveAccessibleMachineIds(principal);
@@ -78,14 +78,14 @@ public class ProductionOrderService {
     return repository.findAll(spec, pageable);
   }
 
-  /**
-   * Build the four-counter KPI snapshot consumed by the OS screen header.
-   * Counts respect the principal scope so OPERATOR/LEADER never see numbers
-   * outside their sector.
-   *
-   * @param principal authenticated user used to scope by sector
-   * @return populated summary
-   */
+ /**
+ * Build the four-counter KPI snapshot consumed by the OS screen header.
+ * Counts respect the principal scope so OPERATOR/LEADER never see numbers
+ * outside their sector.
+ *
+ * @param principal authenticated user used to scope by sector
+ * @return populated summary
+ */
   public ProductionOrderSummaryDTO summarize(AuthenticatedUser principal) {
     Set<UUID> allowedMachineIds = resolveAccessibleMachineIds(principal);
     List<ProductionOrderCache> rows = repository.findAll();

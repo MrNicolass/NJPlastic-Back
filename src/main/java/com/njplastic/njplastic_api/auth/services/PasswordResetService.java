@@ -20,7 +20,7 @@ import com.njplastic.njplastic_api.auth.repositories.PasswordResetTokenRepositor
 import lombok.RequiredArgsConstructor;
 
 /**
- * Orchestrates the password recovery flow (EP-BE-02 reopened). Two entry
+ * Orchestrates the password recovery flow (reopened). Two entry
  * points: {@link #requestReset(String)} starts the flow and is idempotent
  * - it always succeeds from the caller's perspective whether the login
  * exists or not, preventing enumeration; {@link #confirmReset(String, String)}
@@ -40,14 +40,14 @@ public class PasswordResetService {
   private final EmailProperties emailProperties;
   private final PasswordEncoder passwordEncoder;
 
-  /**
-   * Start the recovery flow. Generates a random token, persists it with the
-   * configured TTL and dispatches the recovery email. Always silent to the
-   * caller - missing login, inactive user or mail-delivery failure are logged
-   * but never surfaced (RFC §6.2 / OWASP A07).
-   *
-   * @param login the login identifier the user typed on the forgot-password screen
-   */
+ /**
+ * Start the recovery flow. Generates a random token, persists it with the
+ * configured TTL and dispatches the recovery email. Always silent to the
+ * caller - missing login, inactive user or mail-delivery failure are logged
+ * but never surfaced (OWASP A07).
+ *
+ * @param login the login identifier the user typed on the forgot-password screen
+ */
   public void requestReset(String login) {
     Optional<User> userOpt = userService.findActiveByLogin(login);
     if (userOpt.isEmpty()) {
@@ -69,15 +69,15 @@ public class PasswordResetService {
     }
   }
 
-  /**
-   * Finish the recovery flow. Validates the token, rotates the user's password
-   * hash and invalidates every outstanding token for the same user.
-   *
-   * @param token       opaque token from the email
-   * @param newPassword the user's chosen new password (plain text)
-   * @throws InvalidResetTokenException if the token is unknown
-   * @throws ExpiredResetTokenException if the token exists but is past its TTL
-   */
+ /**
+ * Finish the recovery flow. Validates the token, rotates the user's password
+ * hash and invalidates every outstanding token for the same user.
+ *
+ * @param token opaque token from the email
+ * @param newPassword the user's chosen new password (plain text)
+ * @throws InvalidResetTokenException if the token is unknown
+ * @throws ExpiredResetTokenException if the token exists but is past its TTL
+ */
   @Transactional
   public void confirmReset(String token, String newPassword) {
     OffsetDateTime now = OffsetDateTime.now();

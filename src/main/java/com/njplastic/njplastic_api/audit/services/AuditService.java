@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Owns access to {@link AuditRepository}. Other layers (the AuditFilter, future
- * message-edit auditing per RN12) must persist audit entries through this
+ * message-edit auditing per) must persist audit entries through this
  * service rather than touching the repository directly, keeping a single
  * append-only entry point.
  */
@@ -33,13 +33,13 @@ public class AuditService {
 
   private final AuditRepository auditRepository;
 
-  /**
-   * Persist an audit entry. A persistence failure is logged and swallowed on
-   * purpose: the audit trail must never break the request it is observing, so
-   * this is a legitimate recovery case rather than a re-throwing wrapper.
-   *
-   * @param auditLog the entry to store
-   */
+ /**
+ * Persist an audit entry. A persistence failure is logged and swallowed on
+ * purpose: the audit trail must never break the request it is observing, so
+ * this is a legitimate recovery case rather than a re-throwing wrapper.
+ *
+ * @param auditLog the entry to store
+ */
   public void saveAudit(AuditLog auditLog) {
     try {
       auditRepository.save(auditLog);
@@ -49,20 +49,19 @@ public class AuditService {
     }
   }
 
-  /**
-   * Paginated read of the audit trail with optional filters (EP-BE-08
-   * sub-task 4). Used by {@code GET /audit-logs}. The audit table stays
-   * append-only - this method is strictly read-side.
-   *
-   * @param userId     optional author UUID filter
-   * @param endpoint   optional endpoint substring filter (case-insensitive)
-   * @param httpMethod optional HTTP method filter (e.g. POST, PUT)
-   * @param httpStatus optional HTTP status code filter
-   * @param from       optional inclusive lower bound on timestamp
-   * @param to         optional inclusive upper bound on timestamp
-   * @param pageable   paging/sort
-   * @return page of audit entries matching every supplied filter
-   */
+ /**
+ * Paginated read of the audit trail with optional filters (* sub-task 4). Used by {@code GET /audit-logs}. The audit table stays
+ * append-only - this method is strictly read-side.
+ *
+ * @param userId optional author UUID filter
+ * @param endpoint optional endpoint substring filter (case-insensitive)
+ * @param httpMethod optional HTTP method filter (e.g. POST, PUT)
+ * @param httpStatus optional HTTP status code filter
+ * @param from optional inclusive lower bound on timestamp
+ * @param to optional inclusive upper bound on timestamp
+ * @param pageable paging/sort
+ * @return page of audit entries matching every supplied filter
+ */
   public Page<AuditLog> findPaged(UUID userId, String endpoint, String httpMethod, Integer httpStatus,
       OffsetDateTime from, OffsetDateTime to, Pageable pageable) {
     Specification<AuditLog> spec = (root, query, cb) -> {
@@ -92,20 +91,20 @@ public class AuditService {
     return auditRepository.findAll(spec, pageable);
   }
 
-  /**
-   * Edition history of an AUTO_STOPPED message reconstructed from the
-   * append-only audit trail (UC12, RF18, RF19, RN12). Filters on the exact
-   * endpoint prefix produced by {@code PUT
-   * /machines/{machineId}/stops/{stopId}/message} requests, keeping only the
-   * successful ones (HTTP 200), so failed attempts do not leak into the
-   * history shown to the user.
-   *
-   * @param machineId owning machine UUID, validated by the caller
-   * @param stopId    target stop UUID, validated by the caller
-   * @param pageable  paging/sort - the service forces a deterministic
-   *                  timestamp-descending order
-   * @return page of audit entries that materialized a stored edition
-   */
+ /**
+ * Edition history of an AUTO_STOPPED message reconstructed from the
+ * append-only audit trail. Filters on the exact
+ * endpoint prefix produced by {@code PUT
+ * /machines/{machineId}/stops/{stopId}/message} requests, keeping only the
+ * successful ones (HTTP 200), so failed attempts do not leak into the
+ * history shown to the user.
+ *
+ * @param machineId owning machine UUID, validated by the caller
+ * @param stopId target stop UUID, validated by the caller
+ * @param pageable paging/sort - the service forces a deterministic
+ * timestamp-descending order
+ * @return page of audit entries that materialized a stored edition
+ */
   public Page<AuditLog> findStopMessageEdits(UUID machineId, UUID stopId, Pageable pageable) {
     String prefix = buildStopMessageEndpointPrefix(machineId, stopId);
     return auditRepository
@@ -113,16 +112,16 @@ public class AuditService {
             "PUT", prefix, 200, pageable);
   }
 
-  /**
-   * Latest successful edition strictly before {@code before}. Used to
-   * resolve {@code previousMessage} for the oldest entry of a page, since
-   * that entry's predecessor lives outside the page.
-   *
-   * @param machineId owning machine UUID
-   * @param stopId    target stop UUID
-   * @param before    exclusive upper bound on the captured timestamp
-   * @return the predecessor entry, or empty when none exists
-   */
+ /**
+ * Latest successful edition strictly before {@code before}. Used to
+ * resolve {@code previousMessage} for the oldest entry of a page, since
+ * that entry's predecessor lives outside the page.
+ *
+ * @param machineId owning machine UUID
+ * @param stopId target stop UUID
+ * @param before exclusive upper bound on the captured timestamp
+ * @return the predecessor entry, or empty when none exists
+ */
   public Optional<AuditLog> findPreviousStopMessageEdit(UUID machineId, UUID stopId, OffsetDateTime before) {
     String prefix = buildStopMessageEndpointPrefix(machineId, stopId);
     return auditRepository
@@ -134,15 +133,15 @@ public class AuditService {
     return "/machines/" + machineId + "/stops/" + stopId + "/message";
   }
 
-  /**
-   * Successful stop-message edits captured in the given window across every
-   * machine, ordered by timestamp descending. Backs the Leader "Eventos
-   * recentes" feed (EP-FE-05, RFC §7.3.2 EP-FE-05 item 6).
-   *
-   * @param from inclusive lower bound on timestamp
-   * @param to   exclusive upper bound on timestamp
-   * @return matching audit entries
-   */
+ /**
+ * Successful stop-message edits captured in the given window across every
+ * machine, ordered by timestamp descending. Backs the Leader "Eventos
+ * recentes" feed (item 6).
+ *
+ * @param from inclusive lower bound on timestamp
+ * @param to exclusive upper bound on timestamp
+ * @return matching audit entries
+ */
   public List<AuditLog> findStopMessageEditsInWindow(OffsetDateTime from, OffsetDateTime to) {
     return auditRepository.findStopMessageEditsInWindow(from, to);
   }

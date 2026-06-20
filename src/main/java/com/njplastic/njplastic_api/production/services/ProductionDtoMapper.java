@@ -22,14 +22,14 @@ import com.njplastic.njplastic_api.production.enums.MachineState;
 @Component
 public class ProductionDtoMapper {
 
-  /**
-   * Convert a {@link Machine} to its summary DTO, embedding the current
-   * operational state when known.
-   *
-   * @param machine      the source entity
-   * @param currentState the latest open machine_status state, or null
-   * @return the summary DTO
-   */
+ /**
+ * Convert a {@link Machine} to its summary DTO, embedding the current
+ * operational state when known.
+ *
+ * @param machine the source entity
+ * @param currentState the latest open machine_status state, or null
+ * @return the summary DTO
+ */
   public MachineSummaryDTO toMachineSummary(Machine machine, MachineState currentState) {
     return MachineSummaryDTO.builder()
         .id(machine.getId())
@@ -43,12 +43,12 @@ public class ProductionDtoMapper {
         .build();
   }
 
-  /**
-   * Convert a {@link MachineStatus} to its timeline DTO.
-   *
-   * @param status the source entity
-   * @return the entry DTO
-   */
+ /**
+ * Convert a {@link MachineStatus} to its timeline DTO.
+ *
+ * @param status the source entity
+ * @return the entry DTO
+ */
   public MachineStatusEntryDTO toStatusEntry(MachineStatus status) {
     return MachineStatusEntryDTO.builder()
         .id(status.getId())
@@ -62,22 +62,22 @@ public class ProductionDtoMapper {
         .build();
   }
 
-  /**
-   * Convert a list of status entities to their DTOs.
-   *
-   * @param records the source entities
-   * @return the entry DTO list
-   */
+ /**
+ * Convert a list of status entities to their DTOs.
+ *
+ * @param records the source entities
+ * @return the entry DTO list
+ */
   public List<MachineStatusEntryDTO> toStatusEntries(List<MachineStatus> records) {
     return records.stream().map(this::toStatusEntry).toList();
   }
 
-  /**
-   * Convert a {@link ProductionCycle} to its response DTO.
-   *
-   * @param cycle the source entity
-   * @return the response DTO
-   */
+ /**
+ * Convert a {@link ProductionCycle} to its response DTO.
+ *
+ * @param cycle the source entity
+ * @return the response DTO
+ */
   public ProductionCycleResponseDTO toCycleResponse(ProductionCycle cycle) {
     return ProductionCycleResponseDTO.builder()
         .id(cycle.getId())
@@ -90,21 +90,21 @@ public class ProductionDtoMapper {
         .build();
   }
 
-  /**
-   * Assemble a single stop-message edition entry from the raw audit log
-   * row and the side data resolved by the caller. The mapper does not read
-   * the JSON payload itself - the service layer extracts and de-sanitizes
-   * the messages because the JSON parsing is shared with other future
-   * edition views.
-   *
-   * @param log             the underlying audit_log row of this edition
-   * @param authorName      display name resolved from the users aggregate,
-   *                        or null when the row is anonymous
-   * @param previousMessage value stored before this edition; null when
-   *                        this is the first known edition of the stop
-   * @param newMessage      value stored by this edition
-   * @return the edition DTO
-   */
+ /**
+ * Assemble a single stop-message edition entry from the raw audit log
+ * row and the side data resolved by the caller. The mapper does not read
+ * the JSON payload itself - the service layer extracts and de-sanitizes
+ * the messages because the JSON parsing is shared with other future
+ * edition views.
+ *
+ * @param log the underlying audit_log row of this edition
+ * @param authorName display name resolved from the users aggregate,
+ * or null when the row is anonymous
+ * @param previousMessage value stored before this edition; null when
+ * this is the first known edition of the stop
+ * @param newMessage value stored by this edition
+ * @return the edition DTO
+ */
   public StopEditDTO toStopEditDTO(AuditLog log, String authorName, String previousMessage, String newMessage) {
     return StopEditDTO.builder()
         .editedAt(log.getTimestamp())

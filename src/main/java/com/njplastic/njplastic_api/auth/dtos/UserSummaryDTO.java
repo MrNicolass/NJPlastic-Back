@@ -45,12 +45,12 @@ public class UserSummaryDTO {
   @Schema(description = "Shift the user is bound to", example = "TURNO_A", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
   private String shift;
 
-  /**
-   * Build a UserSummaryDTO from a persisted {@link User} entity.
-   *
-   * @param user the source entity
-   * @return a populated UserSummaryDTO instance
-   */
+ /**
+ * Build a UserSummaryDTO from a persisted {@link User} entity.
+ *
+ * @param user the source entity
+ * @return a populated UserSummaryDTO instance
+ */
   public static UserSummaryDTO from(User user) {
     return UserSummaryDTO.builder()
         .id(user.getId())

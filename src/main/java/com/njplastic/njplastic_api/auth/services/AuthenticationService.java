@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
  * Validates credentials and issues JWTs. Always throws
  * {@link InvalidCredentialsException} - whether the login does not exist,
  * the user is inactive, or the password does not match - aligned with RFC
- * §3.2.1 and OWASP A07 to prevent user enumeration.
+ * OWASP A07 to prevent user enumeration.
  */
 @Service
 @RequiredArgsConstructor
@@ -31,17 +31,17 @@ public class AuthenticationService {
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider tokenProvider;
 
-  /**
-   * Authenticate a login request and issue a JWT. A BCrypt comparison is always
-   * performed - against the stored hash when the user exists, or against a fixed
-   * dummy hash otherwise - so missing/inactive logins take the same time as wrong
-   * passwords, preventing user enumeration via timing (RFC §3.2.1 / OWASP A07).
-   *
-   * @param request the login credentials
-   * @return the JSON response paired with the issued token (compact + exp) so
-   *         the controller can mirror the exp into the {@code access_token_exp}
-   *         cookie alongside the {@code access_token} httpOnly cookie
-   */
+ /**
+ * Authenticate a login request and issue a JWT. A BCrypt comparison is always
+ * performed - against the stored hash when the user exists, or against a fixed
+ * dummy hash otherwise - so missing/inactive logins take the same time as wrong
+ * passwords, preventing user enumeration via timing (OWASP A07).
+ *
+ * @param request the login credentials
+ * @return the JSON response paired with the issued token (compact + exp) so
+ * the controller can mirror the exp into the {@code access_token_exp}
+ * cookie alongside the {@code access_token} httpOnly cookie
+ */
   public AuthenticationResult authenticate(LoginRequestDTO request) {
     Optional<User> userOpt = userService.findActiveByLogin(request.getLogin());
     String hash = userOpt.map(User::getPasswordHash).orElse(DUMMY_HASH);

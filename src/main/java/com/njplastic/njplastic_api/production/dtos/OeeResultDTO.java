@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * OEE computation result for a machine over a period (RF10). Availability and
+ * OEE computation result for a machine over a period. Availability and
  * Performance are always present; Quality and the final OEE are null when no
  * quality counts cover the period, in which case {@code partial} is true. All
  * ratios are fractions in the range [0, 1].

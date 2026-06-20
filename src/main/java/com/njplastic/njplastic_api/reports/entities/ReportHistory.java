@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Generated artifact record (EP-BE-08 sub-task 5). Maps to {@code report_history}
+ * Generated artifact record (sub-task 5). Maps to {@code report_history}
  * from V11. Retention is enforced by {@code ReportRetentionJob} - the row and
  * the file at {@code path} are deleted after 90 days.
  */

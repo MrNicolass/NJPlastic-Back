@@ -44,8 +44,7 @@ import lombok.RequiredArgsConstructor;
  * Keeps a single open record per machine (end_time null) representing the
  * current
  * state; every transition closes the previous record and opens a new one
- * (RN09-RN11,
- * RFC §5.2.2). The consecutive-pause counter itself is not stored here - it is
+ * (*). The consecutive-pause counter itself is not stored here - it is
  * derived from production_cycle by {@link ProductionService}; this service only
  * persists its snapshot in {@code consecutiveCountAtCreation} for traceability.
  */
@@ -59,35 +58,35 @@ public class MachineStatusService {
   private final ProductionDtoMapper mapper;
   private final ObjectMapper objectMapper;
 
-  /**
-   * Current open status record for a machine, if any.
-   *
-   * @param machineId the machine UUID
-   * @return the open record, or empty when no transition has been recorded yet
-   */
+ /**
+ * Current open status record for a machine, if any.
+ *
+ * @param machineId the machine UUID
+ * @return the open record, or empty when no transition has been recorded yet
+ */
   public Optional<MachineStatus> findCurrentOpen(UUID machineId) {
     return machineStatusRepository.findTopByMachineIdAndEndTimeIsNullOrderByStartTimeDesc(machineId);
   }
 
-  /**
-   * Current operational state of a machine derived from its open record.
-   *
-   * @param machineId the machine UUID
-   * @return the current state, or empty when none has been recorded yet
-   */
+ /**
+ * Current operational state of a machine derived from its open record.
+ *
+ * @param machineId the machine UUID
+ * @return the current state, or empty when none has been recorded yet
+ */
   public Optional<MachineState> currentState(UUID machineId) {
     return findCurrentOpen(machineId).map(MachineStatus::getState);
   }
 
-  /**
-   * Ensure the machine is RUNNING after a normal-interval pulse. Closes any open
-   * non-running record (AUTO_STOPPED/OFFLINE/PAUSED) at the pulse instant and
-   * opens
-   * a RUNNING record; does nothing when already running (RN10, RN11).
-   *
-   * @param machine        the owning machine
-   * @param pulseTimestamp the reconstructed pulse instant
-   */
+ /**
+ * Ensure the machine is RUNNING after a normal-interval pulse. Closes any open
+ * non-running record (AUTO_STOPPED/OFFLINE/PAUSED) at the pulse instant and
+ * opens
+ * a RUNNING record; does nothing when already running.
+ *
+ * @param machine the owning machine
+ * @param pulseTimestamp the reconstructed pulse instant
+ */
   public void resumeRunning(Machine machine, OffsetDateTime pulseTimestamp) {
     try {
       Optional<MachineStatus> current = findCurrentOpen(machine.getId());
@@ -104,21 +103,43 @@ public class MachineStatusService {
     }
   }
 
-  /**
-   * Record an isolated pause (RN06) and keep the machine producing. Closes the
-   * open
-   * record at the gap start, persists a closed PAUSED segment for the gap, and
-   * opens
-   * a fresh RUNNING record at the pulse instant.
-   *
-   * @param machine        the owning machine
-   * @param gapStart       timestamp of the previous confirmed pulse
-   * @param pulseTimestamp the reconstructed pulse instant that ended the gap
-   * @param count          consecutive-pause counter snapshot
-   */
+ /**
+ * Record an isolated pause and keep the machine producing. Closes the
+ * open
+ * record at the gap start, persists a closed PAUSED segment for the gap, and
+ * opens
+ * a fresh RUNNING record at the pulse instant. When the previous PAUSED
+ * segment ends exactly at {@code gapStart}, the two are merged into a single
+ * row by extending the previous {@code endTime} instead of producing a
+ * duplicate side-by-side PAUSED entry (avoids the dashboard noise reported
+ * when many late pulses arrive in the same minute).
+ *
+ * @param machine the owning machine
+ * @param gapStart timestamp of the previous confirmed pulse
+ * @param pulseTimestamp the reconstructed pulse instant that ended the gap
+ * @param count consecutive-pause counter snapshot
+ */
   public void recordIsolatedPause(Machine machine, OffsetDateTime gapStart, OffsetDateTime pulseTimestamp, int count) {
     try {
-      findCurrentOpen(machine.getId()).ifPresent(open -> close(open, gapStart));
+      Optional<MachineStatus> contiguousPause = machineStatusRepository
+          .findTopByMachineIdAndStateAndEndTimeOrderByStartTimeDesc(
+              machine.getId(), MachineState.PAUSED, gapStart);
+      Optional<MachineStatus> openRecord = findCurrentOpen(machine.getId());
+      boolean mergeable = contiguousPause.isPresent()
+          && openRecord.isPresent()
+          && openRecord.get().getState() == MachineState.RUNNING
+          && gapStart.equals(openRecord.get().getStartTime());
+      if (mergeable) {
+        MachineStatus pause = contiguousPause.get();
+        pause.setEndTime(pulseTimestamp);
+        pause.setConsecutiveCountAtCreation(count);
+        machineStatusRepository.save(pause);
+        MachineStatus running = openRecord.get();
+        running.setStartTime(pulseTimestamp);
+        machineStatusRepository.save(running);
+        return;
+      }
+      openRecord.ifPresent(open -> close(open, gapStart));
       savePause(machine.getId(), gapStart, pulseTimestamp, count);
       open(machine.getId(), MachineState.RUNNING, pulseTimestamp, null, null, null);
     } catch (DataAccessException ex) {
@@ -127,21 +148,20 @@ public class MachineStatusService {
     }
   }
 
-  /**
-   * Escalate to AUTO_STOPPED when the consecutive-pause threshold is reached
-   * (RN09,
-   * RF17). Closes the open record at the gap start, persists the triggering gap
-   * as a
-   * closed PAUSED segment, and opens an AUTO_STOPPED record with the default
-   * message
-   * (RF18); the machine stays stopped until the next normal pulse (RN10).
-   *
-   * @param machine        the owning machine
-   * @param gapStart       timestamp of the previous confirmed pulse
-   * @param pulseTimestamp the reconstructed pulse instant that ended the gap
-   * @param count          consecutive-pause counter snapshot
-   * @param message        default message applied to the AUTO_STOPPED record
-   */
+ /**
+ * Escalate to AUTO_STOPPED when the consecutive-pause threshold is reached
+ * (*). Closes the open record at the gap start, persists the triggering gap
+ * as a
+ * closed PAUSED segment, and opens an AUTO_STOPPED record with the default
+ * message
+ *; the machine stays stopped until the next normal pulse.
+ *
+ * @param machine the owning machine
+ * @param gapStart timestamp of the previous confirmed pulse
+ * @param pulseTimestamp the reconstructed pulse instant that ended the gap
+ * @param count consecutive-pause counter snapshot
+ * @param message default message applied to the AUTO_STOPPED record
+ */
   public void recordAutoStop(Machine machine, OffsetDateTime gapStart, OffsetDateTime pulseTimestamp,
       int count, String message) {
     try {
@@ -154,18 +174,31 @@ public class MachineStatusService {
     }
   }
 
-  /**
-   * Log a continuing slow cycle while the machine is already AUTO_STOPPED.
-   * Persists a
-   * closed PAUSED segment for traceability without touching the open stop record.
-   *
-   * @param machine        the owning machine
-   * @param gapStart       timestamp of the previous confirmed pulse
-   * @param pulseTimestamp the reconstructed pulse instant that ended the gap
-   * @param count          consecutive-pause counter snapshot
-   */
+ /**
+ * Log a continuing slow cycle while the machine is already AUTO_STOPPED.
+ * Persists a closed PAUSED segment for traceability without touching the open
+ * stop record. When the previous PAUSED segment ends exactly at
+ * {@code gapStart} the two are merged into a single row by extending the
+ * previous {@code endTime}, avoiding dozens of side-by-side PAUSED rows
+ * during a long stop.
+ *
+ * @param machine the owning machine
+ * @param gapStart timestamp of the previous confirmed pulse
+ * @param pulseTimestamp the reconstructed pulse instant that ended the gap
+ * @param count consecutive-pause counter snapshot
+ */
   public void recordPauseUnderStop(Machine machine, OffsetDateTime gapStart, OffsetDateTime pulseTimestamp, int count) {
     try {
+      Optional<MachineStatus> contiguousPause = machineStatusRepository
+          .findTopByMachineIdAndStateAndEndTimeOrderByStartTimeDesc(
+              machine.getId(), MachineState.PAUSED, gapStart);
+      if (contiguousPause.isPresent()) {
+        MachineStatus pause = contiguousPause.get();
+        pause.setEndTime(pulseTimestamp);
+        pause.setConsecutiveCountAtCreation(count);
+        machineStatusRepository.save(pause);
+        return;
+      }
       savePause(machine.getId(), gapStart, pulseTimestamp, count);
     } catch (DataAccessException ex) {
       throw new MachineStatusPersistenceException(
@@ -173,19 +206,26 @@ public class MachineStatusService {
     }
   }
 
-  /**
-   * Mark a machine OFFLINE when the watchdog detects no pulses within the window.
-   * Closes the open record and opens an OFFLINE record; no-op when already
-   * offline.
-   *
-   * @param machine the owning machine
-   * @param now     the watchdog scan instant
-   */
+ /**
+ * Mark a machine OFFLINE when the watchdog detects no pulses within the window.
+ * Closes the open record and opens an OFFLINE record; no-op when already
+ * offline or when an AUTO_STOPPED record is still open. Keeping the
+ * AUTO_STOPPED in place lets the operator see why the machine stopped instead
+ * of having the badge silently switched to OFFLINE the next watchdog tick
+ * (the next normal pulse will transition straight to RUNNING via
+ * {@link #resumeRunning}).
+ *
+ * @param machine the owning machine
+ * @param now the watchdog scan instant
+ */
   public void markOffline(Machine machine, OffsetDateTime now) {
     try {
       Optional<MachineStatus> current = findCurrentOpen(machine.getId());
-      if (current.isPresent() && current.get().getState() == MachineState.OFFLINE) {
-        return;
+      if (current.isPresent()) {
+        MachineState openState = current.get().getState();
+        if (openState == MachineState.OFFLINE || openState == MachineState.AUTO_STOPPED) {
+          return;
+        }
       }
       current.ifPresent(open -> close(open, now));
       open(machine.getId(), MachineState.OFFLINE, now, null, null, null);
@@ -195,14 +235,14 @@ public class MachineStatusService {
     }
   }
 
-  /**
-   * Status records of downtime states overlapping the window, used by OEE (RF10).
-   *
-   * @param machineId the machine UUID
-   * @param from      window start
-   * @param to        window end
-   * @return overlapping PAUSED/AUTO_STOPPED/OFFLINE records
-   */
+ /**
+ * Status records of downtime states overlapping the window, used by OEE.
+ *
+ * @param machineId the machine UUID
+ * @param from window start
+ * @param to window end
+ * @return overlapping PAUSED/AUTO_STOPPED/OFFLINE records
+ */
   public List<MachineStatus> findDowntimeOverlapping(UUID machineId, OffsetDateTime from, OffsetDateTime to) {
     return machineStatusRepository.findOverlapping(
         machineId,
@@ -210,47 +250,47 @@ public class MachineStatusService {
         from, to);
   }
 
-  /**
-   * Every status record of a machine that overlaps {@code [from, to]},
-   * ordered by start time. Used by the status timeline endpoint and the
-   * shift report (RF15).
-   *
-   * @param machineId the machine UUID
-   * @param from      window start
-   * @param to        window end
-   * @return overlapping records
-   */
+ /**
+ * Every status record of a machine that overlaps {@code [from, to]},
+ * ordered by start time. Used by the status timeline endpoint and the
+ * shift report.
+ *
+ * @param machineId the machine UUID
+ * @param from window start
+ * @param to window end
+ * @return overlapping records
+ */
   public List<MachineStatus> findWindow(UUID machineId, OffsetDateTime from, OffsetDateTime to) {
     return machineStatusRepository.findWindow(machineId, from, to);
   }
 
-  /**
-   * Status records in the given states overlapping {@code [from, to]},
-   * used by the shift report (RF15) to list manual pauses and auto stops
-   * in separate sections.
-   *
-   * @param machineId the machine UUID
-   * @param states    the states to include
-   * @param from      window start
-   * @param to        window end
-   * @return overlapping records
-   */
+ /**
+ * Status records in the given states overlapping {@code [from, to]},
+ * used by the shift report to list manual pauses and auto stops
+ * in separate sections.
+ *
+ * @param machineId the machine UUID
+ * @param states the states to include
+ * @param from window start
+ * @param to window end
+ * @return overlapping records
+ */
   public List<MachineStatus> findWindowByStates(UUID machineId,
       List<MachineState> states, OffsetDateTime from, OffsetDateTime to) {
     return machineStatusRepository.findWindowByStates(machineId, states, from, to);
   }
 
-  /**
-   * Classify the most recent isolated pause of a machine by attaching a
-   * reason and the author (RF09, UC03). Targets the latest PAUSED record
-   * whose reason is null; throws {@link PauseAlreadyClassifiedException}
-   * (409) when no such record exists.
-   *
-   * @param machineId the machine UUID
-   * @param reason    the reason text supplied by the user
-   * @param authorId  the user UUID registering the reason
-   * @return the updated record
-   */
+ /**
+ * Classify the most recent isolated pause of a machine by attaching a
+ * reason and the author. Targets the latest PAUSED record
+ * whose reason is null; throws {@link PauseAlreadyClassifiedException}
+ * (409) when no such record exists.
+ *
+ * @param machineId the machine UUID
+ * @param reason the reason text supplied by the user
+ * @param authorId the user UUID registering the reason
+ * @return the updated record
+ */
   @Transactional
   public MachineStatus classifyLastIsolatedPause(UUID machineId, String reason, UUID authorId) {
     MachineStatus target = machineStatusRepository
@@ -267,20 +307,20 @@ public class MachineStatusService {
     }
   }
 
-  /**
-   * Edit the message of an AUTO_STOPPED record (RF18, RF19, UC12). The
-   * audit trail is captured by the global {@code AuditFilter} (RF20).
-   * Throws {@link StopNotFoundException} (404) when the id is unknown or
-   * the record does not belong to the machine, and
-   * {@link StopMessageNotEditableException} (422) when the state is not
-   * AUTO_STOPPED.
-   *
-   * @param machineId the machine UUID from the path
-   * @param stopId    the stop UUID from the path
-   * @param message   the new message text
-   * @param authorId  the user UUID editing the message
-   * @return the updated record
-   */
+ /**
+ * Edit the message of an AUTO_STOPPED record. The
+ * audit trail is captured by the global {@code AuditFilter}.
+ * Throws {@link StopNotFoundException} (404) when the id is unknown or
+ * the record does not belong to the machine, and
+ * {@link StopMessageNotEditableException} (422) when the state is not
+ * AUTO_STOPPED.
+ *
+ * @param machineId the machine UUID from the path
+ * @param stopId the stop UUID from the path
+ * @param message the new message text
+ * @param authorId the user UUID editing the message
+ * @return the updated record
+ */
   @Transactional
   public MachineStatus editAutoStopMessage(UUID machineId, UUID stopId, String message, UUID authorId) {
     MachineStatus stop = machineStatusRepository.findById(stopId)
@@ -304,28 +344,28 @@ public class MachineStatusService {
     }
   }
 
-  /**
-   * Edition history of an AUTO_STOPPED message (UC12, RF18, RF19, RN12).
-   * The history is reconstructed from the append-only audit_log instead of
-   * a dedicated table: every {@code PUT
-   * /machines/{id}/stops/{stopId}/message} request was captured by the
-   * global AuditFilter (RF20), so the audit row already carries
-   * timestamp, author and the new message JSON. The {@code
-   * previousMessage} is resolved by a sliding window over the page plus a
-   * single lookup of the entry immediately preceding the page when needed.
-   *
-   * <p>The result is forcibly ordered by timestamp descending (most recent
-   * first) to match the dashboard rendering; the caller's {@code Sort}
-   * value is overridden.</p>
-   *
-   * @param machineId owning machine UUID
-   * @param stopId    target stop UUID
-   * @param pageable  paging info; sort is overridden to timestamp DESC
-   * @return page of {@link StopEditDTO} entries, oldest of the page at the
-   *         tail
-   * @throws StopNotFoundException when the stop does not exist or does not
-   *                               belong to the machine
-   */
+ /**
+ * Edition history of an AUTO_STOPPED message.
+ * The history is reconstructed from the append-only audit_log instead of
+ * a dedicated table: every {@code PUT
+ * /machines/{id}/stops/{stopId}/message} request was captured by the
+ * global AuditFilter, so the audit row already carries
+ * timestamp, author and the new message JSON. The {@code
+ * previousMessage} is resolved by a sliding window over the page plus a
+ * single lookup of the entry immediately preceding the page when needed.
+ *
+ * <p>The result is forcibly ordered by timestamp descending (most recent
+ * first) to match the dashboard rendering; the caller's {@code Sort}
+ * value is overridden.</p>
+ *
+ * @param machineId owning machine UUID
+ * @param stopId target stop UUID
+ * @param pageable paging info; sort is overridden to timestamp DESC
+ * @return page of {@link StopEditDTO} entries, oldest of the page at the
+ * tail
+ * @throws StopNotFoundException when the stop does not exist or does not
+ * belong to the machine
+ */
   public Page<StopEditDTO> findEditHistory(UUID machineId, UUID stopId, Pageable pageable) {
     MachineStatus stop = machineStatusRepository.findById(stopId)
         .orElseThrow(() -> new StopNotFoundException("Stop not found: " + stopId));
@@ -380,19 +420,19 @@ public class MachineStatusService {
     return userService.findById(authorId).map(User::getName).orElse("(deleted user)");
   }
 
-  /**
-   * Status records whose {@code startTime} falls in {@code [from, to)}, scoped
-   * to a set of accessible machines and a set of operational states. Sole
-   * caller is the Leader "Eventos recentes" feed (EP-FE-05, RFC §7.3.2 item 6);
-   * the order is forced by the repository so the consumer can merge with other
-   * sources by timestamp without re-sorting per source.
-   *
-   * @param machineIds accessible machines for the principal (RN02-RN04)
-   * @param states     operational states to include (typically PAUSED and AUTO_STOPPED)
-   * @param from       inclusive lower bound on startTime
-   * @param to         exclusive upper bound on startTime
-   * @return matching records ordered by startTime descending
-   */
+ /**
+ * Status records whose {@code startTime} falls in {@code [from, to)}, scoped
+ * to a set of accessible machines and a set of operational states. Sole
+ * caller is the Leader "Eventos recentes" feed (item 6);
+ * the order is forced by the repository so the consumer can merge with other
+ * sources by timestamp without re-sorting per source.
+ *
+ * @param machineIds accessible machines for the principal 
+ * @param states operational states to include (typically PAUSED and AUTO_STOPPED)
+ * @param from inclusive lower bound on startTime
+ * @param to exclusive upper bound on startTime
+ * @return matching records ordered by startTime descending
+ */
   public List<MachineStatus> findRecentStatusChanges(Set<UUID> machineIds,
       Collection<MachineState> states, OffsetDateTime from, OffsetDateTime to) {
     if (machineIds == null || machineIds.isEmpty() || states == null || states.isEmpty()) {
@@ -402,14 +442,14 @@ public class MachineStatusService {
         .findByMachineIdInAndStateInAndStartTimeBetweenOrderByStartTimeDesc(machineIds, states, from, to);
   }
 
-  /**
-   * Confirmed PAUSED/AUTO_STOPPED records waiting to be written to the ERP,
-   * ordered by start time ascending. Page size caps the batch the ERP sync
-   * writes per window (RF14, RN07). Sole consumer is {@code ErpSyncService}.
-   *
-   * @param pageable the page request
-   * @return confirmed downtime records waiting to be synced
-   */
+ /**
+ * Confirmed PAUSED/AUTO_STOPPED records waiting to be written to the ERP,
+ * ordered by start time ascending. Page size caps the batch the ERP sync
+ * writes per window. Sole consumer is {@code ErpSyncService}.
+ *
+ * @param pageable the page request
+ * @return confirmed downtime records waiting to be synced
+ */
   public List<MachineStatus> findConfirmedDowntimeAwaitingSync(Pageable pageable) {
     return machineStatusRepository.findByRecordStateAndStateInOrderByStartTimeAsc(
         RecordState.CONFIRMED,
@@ -417,13 +457,13 @@ public class MachineStatusService {
         pageable);
   }
 
-  /**
-   * Transition the given records from CONFIRMED to SYNCED after the ERP write
-   * acknowledged them (RN07). MachineStatusService is the sole owner of the
-   * record_state transition, so callers must come through this method.
-   *
-   * @param records the records to mark
-   */
+ /**
+ * Transition the given records from CONFIRMED to SYNCED after the ERP write
+ * acknowledged them. MachineStatusService is the sole owner of the
+ * record_state transition, so callers must come through this method.
+ *
+ * @param records the records to mark
+ */
   public void markStatusesAsSynced(Collection<MachineStatus> records) {
     if (records.isEmpty()) {
       return;

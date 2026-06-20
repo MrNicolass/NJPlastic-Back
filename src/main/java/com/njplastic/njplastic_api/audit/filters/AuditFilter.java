@@ -23,7 +23,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Persists one append-only audit_log row per request (RF20, RN12, RNF08).
+ * Persists one append-only audit_log row per request.
  * Runs after JwtAuthenticationFilter so the authenticated user is available,
  * and wraps the downstream chain so the final status and bodies (including
  * 401/403 produced by Spring Security) are captured. Bodies are sanitized

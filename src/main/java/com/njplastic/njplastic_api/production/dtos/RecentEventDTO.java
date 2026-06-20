@@ -17,8 +17,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Single entry of the Leader's "Eventos recentes" panel (EP-FE-05, RFC
- * §7.3.2 EP-FE-05 item 6, mockup Dashboard_Part2_V1). Aggregated server-side
+ * Single entry of the Leader's "Eventos recentes" panel (RFC
+ * mockup Dashboard_Part2_V1). Aggregated server-side
  * from four sources - manual events, manual pauses, auto stops and stop
  * message edits - and projected into a uniform shape so the frontend can
  * render a single timeline without fan-out fetches per machine.

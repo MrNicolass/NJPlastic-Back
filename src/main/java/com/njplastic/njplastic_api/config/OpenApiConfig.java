@@ -17,6 +17,6 @@ import io.swagger.v3.oas.annotations.servers.Server;
     + "and exposes REST endpoints for the React/Next.js dashboard.", contact = @Contact(name = "NJPlastic Team", email = "contato@njplastic.com.br"), license = @License(name = "Proprietary")), servers = {
         @Server(url = "http://localhost:8111", description = "Local development")
     })
-@SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT", in = SecuritySchemeIn.HEADER, description = "JWT Bearer token issued by POST /auth/login (EP-BE-02).")
+@SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT", in = SecuritySchemeIn.HEADER, description = "JWT Bearer token issued by POST /auth/login.")
 public class OpenApiConfig {
 }

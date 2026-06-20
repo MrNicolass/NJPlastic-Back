@@ -15,8 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Single entry of the edition history of an AUTO_STOPPED message (UC12,
- * RF18, RF19, RN12). Reconstructed from the append-only {@code audit_log}
+ * Single entry of the edition history of an AUTO_STOPPED message (*). Reconstructed from the append-only {@code audit_log}
  * table, so no new persistence is needed: every edition flowed through
  * {@code PUT /machines/{id}/stops/{stopId}/message} and was captured by
  * the global {@code AuditFilter}. Used by {@code GET

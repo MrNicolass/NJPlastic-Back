@@ -4,8 +4,8 @@ import com.njplastic.njplastic_api.config.exceptions.BaseApiUnprocessableEntityE
 
 /**
  * Thrown when {@code PUT /machines/{id}/stops/{stopId}/message} targets a
- * record whose state is not AUTO_STOPPED. RF19 restricts editable messages
- * to auto-stop entries (UC12), so any other state is rejected. Maps to
+ * record whose state is not AUTO_STOPPED. restricts editable messages
+ * to auto-stop entries, so any other state is rejected. Maps to
  * HTTP 422 through {@link BaseApiUnprocessableEntityException}.
  */
 public class StopMessageNotEditableException extends BaseApiUnprocessableEntityException {

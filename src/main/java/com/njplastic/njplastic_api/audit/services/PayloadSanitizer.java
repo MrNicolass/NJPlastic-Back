@@ -17,7 +17,7 @@ import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Turns a raw HTTP body into the JSON string persisted in audit_log, enforcing
- * the LGPD/RFC §6 sanitization rules (RNF08). Values of sensitive keys
+ * the LGPD/ sanitization rules. Values of sensitive keys
  * (password, token, authorization, secret) are replaced by "[REDACTED]"; the
  * output is always valid JSON so it can be stored in the JSONB columns.
  * Non-JSON
@@ -40,14 +40,14 @@ public class PayloadSanitizer {
     this.maxPayloadBytes = maxPayloadBytes;
   }
 
-  /**
-   * Sanitize a request or response body for persistence.
-   *
-   * @param body        the raw body bytes (may be null or empty)
-   * @param contentType the body content type, used to detect JSON
-   * @return sanitized JSON string, a JSON placeholder for non-JSON/oversized
-   *         bodies, or null when the body is empty
-   */
+ /**
+ * Sanitize a request or response body for persistence.
+ *
+ * @param body the raw body bytes (may be null or empty)
+ * @param contentType the body content type, used to detect JSON
+ * @return sanitized JSON string, a JSON placeholder for non-JSON/oversized
+ * bodies, or null when the body is empty
+ */
   public String sanitize(byte[] body, String contentType) {
     if (body == null || body.length == 0) {
       return null;

@@ -149,6 +149,42 @@ class MachineStatusServiceTest {
   }
 
   @Test
+  void recordIsolatedPause_mergesContiguousPausedRecord() {
+    MachineStatus previousPause = MachineStatus.builder()
+        .id(UUID.randomUUID())
+        .machineId(MACHINE_ID)
+        .state(MachineState.PAUSED)
+        .startTime(T0.minusMinutes(1))
+        .endTime(T0)
+        .recordState(RecordState.CONFIRMED)
+        .build();
+    MachineStatus openRunning = MachineStatus.builder()
+        .id(UUID.randomUUID())
+        .machineId(MACHINE_ID)
+        .state(MachineState.RUNNING)
+        .startTime(T0)
+        .recordState(RecordState.CONFIRMED)
+        .build();
+    when(machineStatusRepository
+        .findTopByMachineIdAndStateAndEndTimeOrderByStartTimeDesc(
+            MACHINE_ID, MachineState.PAUSED, T0))
+        .thenReturn(Optional.of(previousPause));
+    when(machineStatusRepository.findTopByMachineIdAndEndTimeIsNullOrderByStartTimeDesc(MACHINE_ID))
+        .thenReturn(Optional.of(openRunning));
+
+    service.recordIsolatedPause(machine(), T0, T1, 2);
+
+    ArgumentCaptor<MachineStatus> captor = ArgumentCaptor.forClass(MachineStatus.class);
+    verify(machineStatusRepository, times(2)).save(captor.capture());
+    List<MachineStatus> saved = captor.getAllValues();
+    assertThat(saved.get(0)).isSameAs(previousPause);
+    assertThat(saved.get(0).getEndTime()).isEqualTo(T1);
+    assertThat(saved.get(0).getConsecutiveCountAtCreation()).isEqualTo(2);
+    assertThat(saved.get(1)).isSameAs(openRunning);
+    assertThat(saved.get(1).getStartTime()).isEqualTo(T1);
+  }
+
+  @Test
   void recordIsolatedPause_wrapsDataAccessException() {
     when(machineStatusRepository.findTopByMachineIdAndEndTimeIsNullOrderByStartTimeDesc(MACHINE_ID))
         .thenThrow(new DataAccessResourceFailureException("db down"));
@@ -202,6 +238,31 @@ class MachineStatusServiceTest {
   }
 
   @Test
+  void recordPauseUnderStop_mergesContiguousPausedRecord() {
+    MachineStatus previousPause = MachineStatus.builder()
+        .id(UUID.randomUUID())
+        .machineId(MACHINE_ID)
+        .state(MachineState.PAUSED)
+        .startTime(T0.minusMinutes(1))
+        .endTime(T0)
+        .recordState(RecordState.CONFIRMED)
+        .build();
+    when(machineStatusRepository
+        .findTopByMachineIdAndStateAndEndTimeOrderByStartTimeDesc(
+            MACHINE_ID, MachineState.PAUSED, T0))
+        .thenReturn(Optional.of(previousPause));
+
+    service.recordPauseUnderStop(machine(), T0, T1, 6);
+
+    ArgumentCaptor<MachineStatus> captor = ArgumentCaptor.forClass(MachineStatus.class);
+    verify(machineStatusRepository, times(1)).save(captor.capture());
+    MachineStatus saved = captor.getValue();
+    assertThat(saved).isSameAs(previousPause);
+    assertThat(saved.getEndTime()).isEqualTo(T1);
+    assertThat(saved.getConsecutiveCountAtCreation()).isEqualTo(6);
+  }
+
+  @Test
   void recordPauseUnderStop_wrapsDataAccessException() {
     when(machineStatusRepository.save(any(MachineStatus.class)))
         .thenThrow(new DataAccessResourceFailureException("db down"));
@@ -215,6 +276,16 @@ class MachineStatusServiceTest {
   void markOffline_noOpWhenAlreadyOffline() {
     when(machineStatusRepository.findTopByMachineIdAndEndTimeIsNullOrderByStartTimeDesc(MACHINE_ID))
         .thenReturn(Optional.of(open(MachineState.OFFLINE)));
+
+    service.markOffline(machine(), T1);
+
+    verify(machineStatusRepository, never()).save(any());
+  }
+
+  @Test
+  void markOffline_noOpWhenAutoStopped() {
+    when(machineStatusRepository.findTopByMachineIdAndEndTimeIsNullOrderByStartTimeDesc(MACHINE_ID))
+        .thenReturn(Optional.of(open(MachineState.AUTO_STOPPED)));
 
     service.markOffline(machine(), T1);
 

@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,12 +36,11 @@ import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Owns access to {@link ProductionEventRepository} (EP-BE-05 reopened).
- * Persists manual production events (training, cleaning, meetings) and exposes
- * a paginated read keyed by machine. Also aggregates the Leader "Eventos
- * recentes" feed (EP-FE-05, RFC §7.3.2 item 6) by merging manual events,
- * manual pauses, auto stops and stop-message edits into a single timeline
- * projection, scoped to the principal's accessible machines.
+ * Owns access to {@link ProductionEventRepository}. Persists manual production
+ * events (training, cleaning, meetings) and exposes a paginated read keyed by
+ * machine. Also aggregates the Leader "Eventos recentes" feed by merging
+ * manual events, manual pauses, auto stops and stop-message edits into a
+ * single timeline projection, scoped to the principal's accessible machines.
  */
 @Service
 @RequiredArgsConstructor
@@ -56,17 +56,17 @@ public class ProductionEventService {
   private final UserService userService;
   private final ObjectMapper objectMapper;
 
-  /**
-   * Persist a new manual production event.
-   *
-   * @param machineId   target machine UUID (must already be access-checked by the caller)
-   * @param userId      author UUID; null when no human author applies
-   * @param type        event category
-   * @param description free-text description
-   * @param startedAt   moment the event started (UTC)
-   * @param endedAt     moment the event ended; null while ongoing
-   * @return the persisted entity
-   */
+ /**
+ * Persist a new manual production event.
+ *
+ * @param machineId target machine UUID (must already be access-checked by the caller)
+ * @param userId author UUID; null when no human author applies
+ * @param type event category
+ * @param description free-text description
+ * @param startedAt moment the event started (UTC)
+ * @param endedAt moment the event ended; null while ongoing
+ * @return the persisted entity
+ */
   @Transactional
   public ProductionEvent register(UUID machineId, UUID userId, EventType type, String description,
       OffsetDateTime startedAt, OffsetDateTime endedAt) {
@@ -81,16 +81,16 @@ public class ProductionEventService {
     return repository.save(event);
   }
 
-  /**
-   * Paginated read of events for a machine, optionally constrained to a time
-   * window.
-   *
-   * @param machineId machine UUID
-   * @param from      optional inclusive start of window
-   * @param to        optional exclusive end of window
-   * @param pageable  paging/sort
-   * @return page of events
-   */
+ /**
+ * Paginated read of events for a machine, optionally constrained to a time
+ * window.
+ *
+ * @param machineId machine UUID
+ * @param from optional inclusive start of window
+ * @param to optional exclusive end of window
+ * @param pageable paging/sort
+ * @return page of events
+ */
   public Page<ProductionEvent> findPaged(UUID machineId, OffsetDateTime from, OffsetDateTime to, Pageable pageable) {
     if (from != null && to != null) {
       return repository.findByMachineIdAndStartedAtBetween(machineId, from, to, pageable);
@@ -98,20 +98,38 @@ public class ProductionEventService {
     return repository.findByMachineId(machineId, pageable);
   }
 
-  /**
-   * Aggregated "Eventos recentes" feed for the Leader dashboard (EP-FE-05,
-   * mockup Dashboard_Part2_V1). Merges four sources scoped to the principal's
-   * accessible machines: manual events, manual pauses, auto stops and
-   * stop-message edits. Each source is fetched once via its owning service;
-   * the result is sorted by timestamp descending and capped at {@code limit}.
-   *
-   * @param principal authenticated user; drives the accessible-machine scope (RN02-RN04)
-   * @param limit     maximum number of entries to return (caller validates the range)
-   * @param from      inclusive lower bound on the entry timestamp
-   * @param to        exclusive upper bound on the entry timestamp
-   * @return merged entries ordered by timestamp descending
-   */
-  public List<RecentEventDTO> findRecent(AuthenticatedUser principal, int limit,
+  private static final int RECENT_FEED_HARD_CAP = 200;
+
+ /**
+ * Aggregated "Eventos recentes" feed for the Leader dashboard. Merges four
+ * sources scoped to the principal's accessible machines: manual events,
+ * manual pauses, auto stops and stop-message edits. The result is ordered
+ * by timestamp descending and sliced according to {@code pageable}.
+ *
+ * <p>The aggregation runs in memory; a hard cap of {@value #RECENT_FEED_HARD_CAP}
+ * entries is enforced to keep allocation bounded — the underlying repositories
+ * already apply their own time-window filter.
+ *
+ * @param principal authenticated user; drives the accessible-machine scope
+ * @param pageable zero-based page request; {@code page} and {@code size} drive the slice
+ * @param from inclusive lower bound on the entry timestamp
+ * @param to exclusive upper bound on the entry timestamp
+ * @return page of merged entries ordered by timestamp descending
+ */
+  public Page<RecentEventDTO> findRecent(AuthenticatedUser principal, Pageable pageable,
+      OffsetDateTime from, OffsetDateTime to) {
+    List<RecentEventDTO> merged = aggregateRecent(principal, from, to);
+    if (merged.isEmpty()) {
+      return new PageImpl<>(List.of(), pageable, 0);
+    }
+    int total = merged.size();
+    int offset = (int) Math.min(pageable.getOffset(), total);
+    int end = Math.min(offset + pageable.getPageSize(), total);
+    List<RecentEventDTO> slice = new ArrayList<>(merged.subList(offset, end));
+    return new PageImpl<>(slice, pageable, total);
+  }
+
+  private List<RecentEventDTO> aggregateRecent(AuthenticatedUser principal,
       OffsetDateTime from, OffsetDateTime to) {
     List<Machine> machines = machineService.findAccessible(principal);
     if (machines.isEmpty()) {
@@ -130,8 +148,8 @@ public class ProductionEventService {
     appendStopMessageEdits(merged, codeByMachineId, userNameCache, from, to);
 
     merged.sort(Comparator.comparing(RecentEventDTO::getTimestamp).reversed());
-    if (merged.size() > limit) {
-      return new ArrayList<>(merged.subList(0, limit));
+    if (merged.size() > RECENT_FEED_HARD_CAP) {
+      return new ArrayList<>(merged.subList(0, RECENT_FEED_HARD_CAP));
     }
     return merged;
   }
@@ -230,7 +248,7 @@ public class ProductionEventService {
         }
       }
     } catch (JacksonException ignored) {
-      // Fall through to the default description below.
+ // Fall through to the default description below.
     }
     return "Mensagem da parada atualizada";
   }

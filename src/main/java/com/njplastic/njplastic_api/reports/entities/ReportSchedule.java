@@ -25,7 +25,7 @@ import lombok.Setter;
 
 /**
  * Manager-defined schedule executed by {@code ReportSchedulerJob}
- * (EP-BE-08 sub-task 5). Maps to {@code report_schedule} from V10.
+ * (sub-task 5). Maps to {@code report_schedule} from V10.
  * {@code params} is a free-form JSON document carrying inputs the renderer
  * needs (e.g. SHIFT report -> sector and shift labels).
  */

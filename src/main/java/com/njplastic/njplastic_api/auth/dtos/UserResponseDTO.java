@@ -60,12 +60,12 @@ public class UserResponseDTO {
   @Schema(description = "Last update timestamp", example = "2026-05-28T08:30:00Z", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private OffsetDateTime updatedAt;
 
-  /**
-   * Build a response DTO from a persisted entity.
-   *
-   * @param user source entity
-   * @return populated DTO
-   */
+ /**
+ * Build a response DTO from a persisted entity.
+ *
+ * @param user source entity
+ * @return populated DTO
+ */
   public static UserResponseDTO from(User user) {
     return UserResponseDTO.builder()
         .id(user.getId())

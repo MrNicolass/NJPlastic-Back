@@ -33,20 +33,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * Application security wiring (EP-BE-02 / RFC §6.2). Stateless JWT chain,
- * CSRF disabled, CORS restricted to the configured frontend origins.
+ * Application security wiring. Stateless JWT chain, CSRF disabled, CORS
+ * restricted to the configured frontend origins.
  *
- * Authorization mapping inherited by downstream epics (RN01..RN04):
- * <ul>
- * <li>RN01 (authenticated only) - covered globally by authenticated()</li>
- * <li>RN02 (operator scope)
- * - @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')") + sector/shift
- * filter in the service</li>
- * <li>RN03 (leader scope) - @PreAuthorize("hasAnyRole('LEADER','MANAGER')") +
- * sector filter in the service</li>
- * <li>RN04 (manager scope) - @PreAuthorize("hasRole('MANAGER')") for
- * writes/admin endpoints</li>
- * </ul>
+ * <p>Authorization is enforced per controller method via
+ * {@code @PreAuthorize} (OPERATOR / LEADER / MANAGER), with the global
+ * filter chain only requiring authentication. Sector and shift scoping
+ * happens inside the services.
  */
 @Configuration
 @EnableWebSecurity

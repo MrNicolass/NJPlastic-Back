@@ -30,8 +30,8 @@ import lombok.Setter;
  * {@code startTime}
  * and a null {@code endTime} while active; the previous open record is closed
  * by the
- * service layer (RN09-RN11). {@code reason}/{@code message} apply to PAUSED and
- * AUTO_STOPPED only (RF08, RF09, RF17, RF18);
+ * service layer. {@code reason}/{@code message} apply to PAUSED and
+ * AUTO_STOPPED only;
  * {@code consecutiveCountAtCreation}
  * preserves the consecutive-pause counter at creation for traceability and to
  * make
@@ -67,7 +67,7 @@ public class MachineStatus {
   @Column(name = "reason", length = 255)
   private String reason;
 
-  @Schema(description = "Editable message for AUTO_STOPPED records (RF18, RF19)", example = "Stop detected automatically after 3 consecutive pauses", nullable = true)
+ @Schema(description = "Editable message for AUTO_STOPPED records ", example = "Stop detected automatically after 3 consecutive pauses", nullable = true)
   @Column(name = "message", columnDefinition = "TEXT")
   private String message;
 
@@ -79,15 +79,15 @@ public class MachineStatus {
   @Column(name = "end_time")
   private OffsetDateTime endTime;
 
-  @Schema(description = "Author UUID of the last message edition (RN12)", example = "3f1c2b9e-7a4d-4e2a-9b8c-1d2e3f4a5b6c", nullable = true)
+ @Schema(description = "Author UUID of the last message edition ", example = "3f1c2b9e-7a4d-4e2a-9b8c-1d2e3f4a5b6c", nullable = true)
   @Column(name = "reason_author_id")
   private UUID reasonAuthorId;
 
-  @Schema(description = "Consecutive-pause counter value when this record was created (RN09-RN11)", example = "3", nullable = true)
+ @Schema(description = "Consecutive-pause counter value when this record was created ", example = "3", nullable = true)
   @Column(name = "consecutive_count_at_creation")
   private Integer consecutiveCountAtCreation;
 
-  @Schema(description = "Record lifecycle state (RN07)", example = "CONFIRMED", nullable = false)
+ @Schema(description = "Record lifecycle state ", example = "CONFIRMED", nullable = false)
   @Enumerated(EnumType.STRING)
   @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "record_state", nullable = false, columnDefinition = "record_state")

@@ -28,11 +28,11 @@ import lombok.Setter;
  * the
  * TIMESTAMPTZ reconstructed by the service from the Arduino generated_at plus
  * the
- * local date (RN05); {@code intervalMs} is the gap since the previous confirmed
- * cycle (RF07); {@code state} follows the RN07 lifecycle. The {@code machineId}
+ * local date; {@code intervalMs} is the gap since the previous confirmed
+ * cycle; {@code state} follows the lifecycle. The {@code machineId}
  * column is a plain UUID without REFERENCES; integrity is enforced in the
  * service
- * layer (RFC §5.2).
+ * layer.
  */
 @Entity
 @Table(name = "production_cycle")
@@ -52,7 +52,7 @@ public class ProductionCycle {
   @Column(name = "machine_id", nullable = false)
   private UUID machineId;
 
-  @Schema(description = "Pulse timestamp reconstructed by the backend (RN05)", example = "2026-05-28T14:23:55Z", nullable = false)
+ @Schema(description = "Pulse timestamp reconstructed by the backend ", example = "2026-05-28T14:23:55Z", nullable = false)
   @Column(name = "pulse_timestamp", nullable = false)
   private OffsetDateTime pulseTimestamp;
 
@@ -64,11 +64,11 @@ public class ProductionCycle {
   @Column(name = "sequence", nullable = false)
   private Long sequence;
 
-  @Schema(description = "Interval in milliseconds since the previous confirmed cycle (RF07)", example = "2010", nullable = true)
+ @Schema(description = "Interval in milliseconds since the previous confirmed cycle ", example = "2010", nullable = true)
   @Column(name = "interval_ms")
   private Integer intervalMs;
 
-  @Schema(description = "Record lifecycle state (RN07)", example = "CONFIRMED", nullable = false)
+ @Schema(description = "Record lifecycle state ", example = "CONFIRMED", nullable = false)
   @Enumerated(EnumType.STRING)
   @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "state", nullable = false, columnDefinition = "record_state")

@@ -19,14 +19,14 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Exposes the ERP sync observability endpoint consumed by the Gestor screen
- * (UC08, Figura 26a/b). Available regardless of the
+ * (Figura 26a/b). Available regardless of the
  * {@code app.datasource.erp.enabled} flag so the Manager can confirm the
- * disabled state. Restricted to MANAGER (RN04). Audit trail and CORS are
+ * disabled state. Restricted to MANAGER. Audit trail and CORS are
  * handled by the standard filters.
  */
 @RestController
 @RequestMapping("/erp/sync")
-@Tag(name = "ERP", description = "ERP integration observability (EP-BE-06 part 2 / UC08)")
+@Tag(name = "ERP", description = "ERP integration observability (part 2)")
 @RequiredArgsConstructor
 public class ErpSyncStatusController {
 

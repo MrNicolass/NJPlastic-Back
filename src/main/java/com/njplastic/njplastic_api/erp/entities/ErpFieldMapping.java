@@ -19,7 +19,7 @@ import lombok.Setter;
 
 /**
  * Field-level mapping between an NJPlastic entity and an ERP table column
- * (EP-BE-06 reopened, mockup ERP_Part2_V1). Maps to {@code erp_field_mapping}
+ * (reopened, mockup ERP_Part2_V1). Maps to {@code erp_field_mapping}
  * from V9. The combination (entity_type, nj_field) is unique - one local field
  * resolves to at most one ERP column per entity.
  */

@@ -40,7 +40,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/auth")
-@Tag(name = "Authentication", description = "JWT login, refresh, logout, current user and password reset endpoints (RFC §6.2 / EP-BE-02 + EP-FE-02)")
+@Tag(name = "Authentication", description = "JWT login, refresh, logout, current user and password reset endpoints ()")
 @RequiredArgsConstructor
 public class AuthenticationController {
 
@@ -54,7 +54,7 @@ public class AuthenticationController {
   @SecurityRequirements({})
   @Operation(summary = "Authenticate and obtain a JWT", description = "Validates credentials against the users table and returns a stateless HS256 JWT. "
       + "Also emits the dual cookies access_token (httpOnly) and access_token_exp (JS-readable, exp UNIX) "
-      + "so the Next.js frontend can drive proactive refresh (EP-FE-02). "
+ + "so the Next.js frontend can drive proactive refresh. "
       + "On failure, returns the same generic 401 response regardless of whether the login exists "
       + "or the password is wrong (OWASP A07).")
   @ApiResponses({
@@ -102,7 +102,7 @@ public class AuthenticationController {
   @PostMapping("/logout")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Operation(summary = "Clear the authentication cookies", description = "Emits Set-Cookie headers with Max-Age=0 for access_token and access_token_exp so "
-      + "the browser drops the EP-FE-02 dual-cookie pair. The JWT itself stays valid until its natural "
+ + "the browser drops the dual-cookie pair. The JWT itself stays valid until its natural "
       + "exp (the project uses single-token without server-side revocation), but the browser can no "
       + "longer present it; non-browser clients should simply discard their stored token.")
   @ApiResponses({

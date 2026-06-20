@@ -39,13 +39,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Admin endpoint for user management (EP-BE-08 sub-task 1). Backs the
+ * Admin endpoint for user management (sub-task 1). Backs the
  * {@code Users_Part1/2_V1} mockup screens. Every operation is MANAGER-only
- * (RN04). Soft-delete preserves the FK semantic in {@code audit_log.user_id}.
+ *. Soft-delete preserves the FK semantic in {@code audit_log.user_id}.
  */
 @RestController
 @RequestMapping("/users")
-@Tag(name = "Users", description = "User administration (EP-BE-08 / mockup Users_Part1/2_V1)")
+@Tag(name = "Users", description = "User administration (mockup Users_Part1/2_V1)")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -145,7 +145,7 @@ public class UserController {
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("hasRole('MANAGER')")
-  @Operation(summary = "Soft-delete a user", description = "Flips active to false. Preserves the FK semantic in audit_log.user_id (RFC §5.2.1).")
+ @Operation(summary = "Soft-delete a user", description = "Flips active to false. Preserves the FK semantic in audit_log.user_id.")
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "User soft-deleted"),
       @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),

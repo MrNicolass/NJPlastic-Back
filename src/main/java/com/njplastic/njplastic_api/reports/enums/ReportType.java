@@ -4,9 +4,9 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * Category of a scheduled report (EP-BE-08 sub-task 5). Each type drives a
+ * Category of a scheduled report (sub-task 5). Each type drives a
  * distinct renderer in {@code ReportGenerationService}. Follows the
- * project-wide enum convention: description equals {@link #name()},
+ * project-wide enum convention: description equals {@link #name},
  * {@link #findByDescription(String)} powers inbound payload parsing.
  */
 public enum ReportType {
@@ -25,10 +25,10 @@ public enum ReportType {
     return description;
   }
 
-  /**
-   * @param description candidate description from an external payload
-   * @return matching ReportType, case-insensitive, or empty
-   */
+ /**
+ * @param description candidate description from an external payload
+ * @return matching ReportType, case-insensitive, or empty
+ */
   public static Optional<ReportType> findByDescription(String description) {
     if (description == null) {
       return Optional.empty();

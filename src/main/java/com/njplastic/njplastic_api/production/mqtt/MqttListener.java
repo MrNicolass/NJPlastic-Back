@@ -17,14 +17,14 @@ import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Inbound MQTT adapter for the shared pulse topic (RFC §5.3). Deserializes each
+ * Inbound MQTT adapter for the shared pulse topic. Deserializes each
  * message into a {@link PulsePayload} and delegates to
  * {@link ProductionService};
  * malformed payloads are logged and dropped so a single bad message cannot
  * stall
  * the subscription. All business rules live in the service - this adapter
  * carries
- * none (RFC §5.3).
+ * none.
  */
 @Component
 @RequiredArgsConstructor
@@ -61,6 +61,6 @@ public class MqttListener implements MqttCallback {
 
   @Override
   public void deliveryComplete(IMqttDeliveryToken token) {
-    // No-op: the backend only subscribes, it does not publish.
+ // No-op: the backend only subscribes, it does not publish.
   }
 }

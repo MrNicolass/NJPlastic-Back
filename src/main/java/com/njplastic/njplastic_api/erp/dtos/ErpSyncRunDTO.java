@@ -18,7 +18,7 @@ import lombok.Setter;
 
 /**
  * Read-only projection of one ErpSyncRun entry, exposed in the recent-runs
- * list of {@code GET /erp/sync/status} (UC08, Figura 26b). Mirrors
+ * list of {@code GET /erp/sync/status} (Figura 26b). Mirrors
  * {@link com.njplastic.njplastic_api.erp.entities.ErpSyncRun} 1:1 with the
  * sole exception that {@code errorMessage} is omitted when the run finished
  * SUCCESS to keep the payload terse.

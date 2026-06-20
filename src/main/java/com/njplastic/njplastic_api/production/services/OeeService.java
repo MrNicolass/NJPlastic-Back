@@ -16,7 +16,7 @@ import com.njplastic.njplastic_api.production.exceptions.UnknownMachineException
 import lombok.RequiredArgsConstructor;
 
 /**
- * Computes OEE (Availability x Performance x Quality, RF10) for a machine over
+ * Computes OEE (Availability x Performance x Quality) for a machine over
  * a window. Availability and Performance always come from production_cycle and
  * machine_status; the Quality factor is optional and read from quality_record,
  * so the result is returned as partial (Quality and OEE null) until a user
@@ -32,15 +32,15 @@ public class OeeService {
   private final MachineStatusService machineStatusService;
   private final QualityService qualityService;
 
-  /**
-   * Compute the OEE for a machine within [from, to] (RF10).
-   *
-   * @param machineId the machine UUID
-   * @param from      window start
-   * @param to        window end
-   * @return the OEE result, possibly partial when no quality data covers the
-   *         window
-   */
+ /**
+ * Compute the OEE for a machine within [from, to].
+ *
+ * @param machineId the machine UUID
+ * @param from window start
+ * @param to window end
+ * @return the OEE result, possibly partial when no quality data covers the
+ * window
+ */
   public OeeResultDTO calculate(UUID machineId, OffsetDateTime from, OffsetDateTime to) {
     Machine machine = machineService.findById(machineId)
         .orElseThrow(() -> new UnknownMachineException("Machine not found: " + machineId));

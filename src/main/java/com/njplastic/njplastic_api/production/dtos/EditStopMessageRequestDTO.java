@@ -14,8 +14,8 @@ import lombok.Setter;
 
 /**
  * Body of {@code PUT /machines/{id}/stops/{stopId}/message}. Replaces
- * the editable message of an AUTO_STOPPED record (RF18, RF19, UC12). The
- * audit trail is written by the global {@code AuditFilter} (RF20, RN12).
+ * the editable message of an AUTO_STOPPED record. The
+ * audit trail is written by the global {@code AuditFilter}.
  */
 @Schema(description = "New message text for an AUTO_STOPPED record")
 @Getter

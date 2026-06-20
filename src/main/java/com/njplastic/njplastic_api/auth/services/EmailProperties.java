@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * {@code from} is the envelope-from used for every outgoing message; in
  * dev this points to a Mailpit instance, in prod it must match the SMTP
  * relay's authenticated identity. {@code passwordResetTtlMinutes} caps the
- * lifetime of recovery tokens (RFC §6.2).
+ * lifetime of recovery tokens.
  */
 @ConfigurationProperties(prefix = "app.mail")
 public record EmailProperties(

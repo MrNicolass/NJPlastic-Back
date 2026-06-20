@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * Output format for a scheduled report (EP-BE-08 sub-task 5). The MVP renderer
+ * Output format for a scheduled report (sub-task 5). The MVP renderer
  * supports CSV end-to-end; PDF and XLSX are accepted at the API surface but
  * generation is deferred until the artifact-rendering library is added.
  */
@@ -36,10 +36,10 @@ public enum ReportFormat {
     return extension;
   }
 
-  /**
-   * @param description candidate description from an external payload
-   * @return matching ReportFormat, case-insensitive, or empty
-   */
+ /**
+ * @param description candidate description from an external payload
+ * @return matching ReportFormat, case-insensitive, or empty
+ */
   public static Optional<ReportFormat> findByDescription(String description) {
     if (description == null) {
       return Optional.empty();

@@ -20,10 +20,10 @@ import lombok.Setter;
 
 /**
  * Local read buffer of open production orders fetched from the customer ERP
- * (RF13, RF14). Maps to the "production_order_cache" table created by
+ *. Maps to the "production_order_cache" table created by
  * V1__init.sql. Acts as a volatile cache - the ErpSyncScheduler overwrites it
- * on every window so consumers (UC11) can avoid round-trips against the ERP
- * (RFC §5.2.1 and §6.1.5). The UNIQUE constraint on {@code erpOrderId} makes
+ * on every window so consumers can avoid round-trips against the ERP
+ *. The UNIQUE constraint on {@code erpOrderId} makes
  * the upsert idempotent; {@code machineId} may stay null while the order is
  * not yet bound to a local machine.
  */

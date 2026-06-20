@@ -45,14 +45,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Report scheduling endpoint (EP-BE-08 sub-task 5). Backs the Manager-only
+ * Report scheduling endpoint (sub-task 5). Backs the Manager-only
  * scheduling cards and the LEADER/MANAGER library tab from the Reports screen
  * (mockup Reports_Part1/2_V1). Actual generation lives in
  * {@code ReportSchedulerJob}.
  */
 @RestController
 @RequestMapping("/reports")
-@Tag(name = "Reports Schedule", description = "Report library and scheduling (EP-BE-08 / mockup Reports_Part1/2_V1)")
+@Tag(name = "Reports Schedule", description = "Report library and scheduling (mockup Reports_Part1/2_V1)")
 @RequiredArgsConstructor
 public class ReportsScheduleController {
 

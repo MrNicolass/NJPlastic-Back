@@ -24,12 +24,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Consolidated reports of the production aggregate (RF15). Returns JSON
- * only; CSV/PDF export is part of the frontend epic EP-FE-07 (RF16).
+ * Consolidated reports of the production aggregate. Returns JSON
+ * only; CSV/PDF export is part of the frontend epic.
  */
 @RestController
 @RequestMapping("/reports")
-@Tag(name = "Reports", description = "Consolidated production reports (EP-BE-05 / RF15)")
+@Tag(name = "Reports", description = "Consolidated production reports ")
 @RequiredArgsConstructor
 public class ReportController {
 

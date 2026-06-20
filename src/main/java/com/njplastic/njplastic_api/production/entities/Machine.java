@@ -20,13 +20,10 @@ import lombok.Setter;
 /**
  * Injection machine and its detection parameters. Maps to the "machine" table
  * created by V1__init.sql. {@code standardCycleMs} and {@code toleranceFactor}
- * define the pause threshold (RN06); {@code consecutivePausesToStop} governs
- * the
- * escalation to AUTO_STOPPED (RN09, RF17); {@code offlineWindowMs} drives the
- * watchdog (OFFLINE). The {@code code} column is the short identifier
- * provisioned
- * on the Arduino (e.g. MAQ-01) used to resolve the pulse to a machine_id
- * (RF01).
+ * define the pause threshold; {@code consecutivePausesToStop} governs the
+ * escalation to AUTO_STOPPED; {@code offlineWindowMs} drives the watchdog
+ * (OFFLINE). The {@code code} column is the short identifier provisioned on
+ * the Arduino (e.g. MAQ-01) used to resolve the pulse to a machine_id.
  */
 @Entity
 @Table(name = "machine")
@@ -54,15 +51,15 @@ public class Machine {
   @Column(name = "sector", length = 64)
   private String sector;
 
-  @Schema(description = "Standard cycle time in milliseconds (RN06)", example = "2000", nullable = false)
+ @Schema(description = "Standard cycle time in milliseconds ", example = "2000", nullable = false)
   @Column(name = "standard_cycle_ms", nullable = false)
   private Integer standardCycleMs;
 
-  @Schema(description = "Tolerance factor applied over the standard cycle for pause detection (RN06)", example = "1.50", nullable = false)
+ @Schema(description = "Tolerance factor applied over the standard cycle for pause detection ", example = "1.50", nullable = false)
   @Column(name = "tolerance_factor", nullable = false, precision = 5, scale = 2)
   private BigDecimal toleranceFactor;
 
-  @Schema(description = "Consecutive pauses required to escalate to AUTO_STOPPED (RN09, RF17)", example = "3", nullable = false)
+ @Schema(description = "Consecutive pauses required to escalate to AUTO_STOPPED ", example = "3", nullable = false)
   @Column(name = "consecutive_pauses_to_stop", nullable = false)
   private Integer consecutivePausesToStop;
 

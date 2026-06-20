@@ -39,11 +39,11 @@ import com.njplastic.njplastic_api.production.services.MachineStatusService;
 import com.njplastic.njplastic_api.production.services.ProductionService;
 
 /**
- * Orchestrates one ERP sync execution (RF12, RF13, RF14, RN07, RN08). Runs in
+ * Orchestrates one ERP sync execution. Runs in
  * three phases ({@link ErpSyncPhase}): refresh the production_order_cache from
  * ERP open orders, push CONFIRMED production_cycle rows, push CONFIRMED
  * PAUSED/AUTO_STOPPED machine_status rows. On any failure inside a phase the
- * local record_state stays CONFIRMED (RN08) and the run finishes as ERROR or
+ * local record_state stays CONFIRMED and the run finishes as ERROR or
  * PARTIAL depending on the phase that broke. State transitions go through
  * {@code ProductionService} / {@code MachineStatusService} - this service never
  * touches the production repositories directly. This service also owns the
@@ -81,16 +81,16 @@ public class ErpSyncService {
     this.batchPageSize = batchPageSize;
   }
 
-  /**
-   * Execute one full sync window: refresh the order cache, push confirmed
-   * cycles, push confirmed downtime. Persists the outcome in {@code erp_sync_run}
-   * regardless of success or failure (RN08, UC08). Throws
-   * {@link ErpSyncDisabledException} (422) when the ERP datasource is
-   * disabled - the scheduler is conditional on the same flag, so this path is
-   * only reached from a manual call (e.g. a future "force sync" endpoint).
-   *
-   * @return the persisted ErpSyncRun row, useful for tests and future force-sync
-   */
+ /**
+ * Execute one full sync window: refresh the order cache, push confirmed
+ * cycles, push confirmed downtime. Persists the outcome in {@code erp_sync_run}
+ * regardless of success or failure. Throws
+ * {@link ErpSyncDisabledException} (422) when the ERP datasource is
+ * disabled - the scheduler is conditional on the same flag, so this path is
+ * only reached from a manual call (e.g. a future "force sync" endpoint).
+ *
+ * @return the persisted ErpSyncRun row, useful for tests and future force-sync
+ */
   public ErpSyncRun runSync() {
     ErpDatabaseRepository erp = erpRepositoryProvider.getIfAvailable();
     if (erp == null) {

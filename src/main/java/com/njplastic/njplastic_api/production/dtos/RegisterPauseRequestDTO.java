@@ -15,7 +15,7 @@ import lombok.Setter;
 /**
  * Body of {@code POST /machines/{id}/pauses}. Carries the reason the
  * operator selected for the latest isolated pause detected on a machine
- * (RF09, UC03). The endpoint resolves the target record itself; the
+ *. The endpoint resolves the target record itself; the
  * client only needs to supply the classification text.
  */
 @Schema(description = "Reason supplied to classify the latest open isolated pause")

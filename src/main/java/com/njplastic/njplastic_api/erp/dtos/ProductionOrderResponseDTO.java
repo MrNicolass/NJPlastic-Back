@@ -50,10 +50,10 @@ public class ProductionOrderResponseDTO {
   @Schema(description = "Instant the cache row was last refreshed by the sync", example = "2026-05-28T14:00:00Z", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private OffsetDateTime lastSyncAt;
 
-  /**
-   * @param entity source cache row
-   * @return populated DTO
-   */
+ /**
+ * @param entity source cache row
+ * @return populated DTO
+ */
   public static ProductionOrderResponseDTO from(ProductionOrderCache entity) {
     return ProductionOrderResponseDTO.builder()
         .id(entity.getId())

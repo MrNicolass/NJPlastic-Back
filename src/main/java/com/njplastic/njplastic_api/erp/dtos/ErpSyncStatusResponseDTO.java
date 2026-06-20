@@ -18,13 +18,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Response of {@code GET /erp/sync/status} (UC08, Figura 26a/b). Aggregates
+ * Response of {@code GET /erp/sync/status} (Figura 26a/b). Aggregates
  * the KPIs the Gestor needs to validate the ERP integration: overall
  * connection state, last/next sync window, success rate over the last 24h,
  * average latency, counters of the last run, the last error message, and the
  * list of recent executions for the audit log.
  */
-@Schema(description = "Aggregated ERP sync KPIs and recent run log for UC08")
+@Schema(description = "Aggregated ERP sync KPIs and recent run log for ")
 @Getter
 @Setter
 @NoArgsConstructor

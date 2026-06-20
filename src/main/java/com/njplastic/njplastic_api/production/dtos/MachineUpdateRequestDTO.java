@@ -20,7 +20,7 @@ import lombok.Setter;
 /**
  * Update payload for {@code PUT /machines/{id}}. Deliberately omits
  * {@code code} - the short code identifies the machine on the MQTT payload
- * (RFC §5.3) and on historical cycles, so it must be immutable.
+ * and on historical cycles, so it must be immutable.
  */
 @Schema(description = "Machine update payload (code is immutable)")
 @Getter
@@ -38,17 +38,17 @@ public class MachineUpdateRequestDTO {
   @Size(max = 64)
   private String sector;
 
-  @Schema(description = "Standard cycle time in milliseconds (RN06)", example = "2000", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
+ @Schema(description = "Standard cycle time in milliseconds ", example = "2000", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
   @NotNull
   @Min(1)
   private Integer standardCycleMs;
 
-  @Schema(description = "Tolerance factor applied over the standard cycle for pause detection (RN06)", example = "1.50", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
+ @Schema(description = "Tolerance factor applied over the standard cycle for pause detection ", example = "1.50", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
   @NotNull
   @DecimalMin(value = "1.01", inclusive = true)
   private BigDecimal toleranceFactor;
 
-  @Schema(description = "Consecutive pauses required to escalate to AUTO_STOPPED (RN09, RF17)", example = "3", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
+ @Schema(description = "Consecutive pauses required to escalate to AUTO_STOPPED ", example = "3", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
   @NotNull
   @Min(1)
   private Integer consecutivePausesToStop;

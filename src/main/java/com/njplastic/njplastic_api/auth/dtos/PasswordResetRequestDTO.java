@@ -14,7 +14,7 @@ import lombok.Setter;
 /**
  * Payload submitted to {@code POST /auth/password-reset} to start the recovery
  * flow. The endpoint always responds 204 regardless of whether the login
- * exists, so no enumeration leak is possible (RFC §6.2 / OWASP A07).
+ * exists, so no enumeration leak is possible (OWASP A07).
  */
 @Schema(description = "Password reset request payload")
 @Getter

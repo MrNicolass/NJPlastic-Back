@@ -26,14 +26,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Audit trail read endpoint (EP-BE-08 sub-task 4). Backs the Auditoria tab of
+ * Audit trail read endpoint (sub-task 4). Backs the Auditoria tab of
  * the Reports screen (mockup Reports_Part2_V1). MANAGER-only - the audit table
  * contains sanitized payloads but exposing them broadly would still leak
- * activity patterns (RN12, RNF08).
+ * activity patterns.
  */
 @RestController
 @RequestMapping("/audit-logs")
-@Tag(name = "Audit Logs", description = "Audit trail reads (EP-BE-08 / mockup Reports_Part2_V1)")
+@Tag(name = "Audit Logs", description = "Audit trail reads (mockup Reports_Part2_V1)")
 @RequiredArgsConstructor
 public class AuditLogController {
 

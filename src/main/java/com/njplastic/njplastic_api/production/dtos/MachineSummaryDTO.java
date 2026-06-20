@@ -21,7 +21,7 @@ import lombok.Setter;
  * parameters and the current operational state derived from
  * {@code machine_status}.
  */
-@Schema(description = "Machine summary view scoped by the caller role (RN02-RN04)")
+@Schema(description = "Machine summary view scoped by the caller role ")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -41,10 +41,10 @@ public class MachineSummaryDTO {
   @Schema(description = "Sector the machine belongs to", example = "INJECAO", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
   private String sector;
 
-  @Schema(description = "Standard cycle time in milliseconds (RN06)", example = "2000", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
+ @Schema(description = "Standard cycle time in milliseconds ", example = "2000", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private Integer standardCycleMs;
 
-  @Schema(description = "Consecutive pauses required to escalate to AUTO_STOPPED (RN09, RF17)", example = "3", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
+ @Schema(description = "Consecutive pauses required to escalate to AUTO_STOPPED ", example = "3", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private Integer consecutivePausesToStop;
 
   @Schema(description = "Whether the machine is active", example = "true", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)

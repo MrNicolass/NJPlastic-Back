@@ -5,7 +5,7 @@ import com.njplastic.njplastic_api.config.exceptions.BaseApiConflictException;
 /**
  * Thrown when {@code POST /machines} attempts to register a machine whose
  * short code already exists in the database. The {@code code} column is
- * globally unique (RFC §5.2.1).
+ * globally unique.
  */
 public class MachineAlreadyExistsException extends BaseApiConflictException {
 

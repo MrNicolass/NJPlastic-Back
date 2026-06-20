@@ -46,24 +46,24 @@ public class ReportGenerationService {
   private final ReportService reportService;
   private final ObjectMapper objectMapper;
 
-  /**
-   * Snapshot returned by a generation pass - both metadata and the bytes
-   * needed for email delivery without re-reading the disk.
-   *
-   * @param path     filesystem path the artifact was written to
-   * @param bytes    artifact contents
-   * @param mimeType IANA mime type aligned with the format
-   * @param filename suggested filename for the email attachment
-   */
+ /**
+ * Snapshot returned by a generation pass - both metadata and the bytes
+ * needed for email delivery without re-reading the disk.
+ *
+ * @param path filesystem path the artifact was written to
+ * @param bytes artifact contents
+ * @param mimeType IANA mime type aligned with the format
+ * @param filename suggested filename for the email attachment
+ */
   public record GeneratedArtifact(Path path, byte[] bytes, String mimeType, String filename) {
   }
 
-  /**
-   * Build and persist an artifact for the given schedule.
-   *
-   * @param schedule the schedule driving the generation; carries type, format and params
-   * @return the generated artifact metadata + bytes
-   */
+ /**
+ * Build and persist an artifact for the given schedule.
+ *
+ * @param schedule the schedule driving the generation; carries type, format and params
+ * @return the generated artifact metadata + bytes
+ */
   public GeneratedArtifact generate(ReportSchedule schedule) {
     String content = renderContent(schedule.getType(), schedule.getFormat(), schedule.getParams());
     byte[] bytes = content.getBytes(StandardCharsets.UTF_8);

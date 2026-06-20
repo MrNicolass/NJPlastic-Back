@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * MQTT client settings. Bound from "app.mqtt.*" properties. The backend
- * subscribes to a single topic shared by every machine (RFC §5.3); credentials
+ * subscribes to a single topic shared by every machine; credentials
  * are optional and left blank when the broker allows anonymous access.
  */
 @ConfigurationProperties(prefix = "app.mqtt")

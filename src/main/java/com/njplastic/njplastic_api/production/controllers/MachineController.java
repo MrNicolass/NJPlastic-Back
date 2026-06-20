@@ -58,17 +58,17 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * REST entry point of the production aggregate (EP-BE-05). Exposes the
- * machine catalogue, the status timeline and edition (UC12), the cycle
+ * REST entry point of the production aggregate. Exposes the
+ * machine catalogue, the status timeline and edition, the cycle
  * history, the OEE result and the quality registration endpoint that
- * closes the OEE loop (RF10). Authorization combines
- * {@code @PreAuthorize} for role coverage (RN02-RN04) with
+ * closes the OEE loop. Authorization combines
+ * {@code @PreAuthorize} for role coverage with
  * {@link MachineService#requireAccessible} for sector scoping in every
  * machine-bound operation.
  */
 @RestController
 @RequestMapping("/machines")
-@Tag(name = "Machines", description = "Production REST API - machines, status, cycles, pauses, stops, OEE and quality (EP-BE-05 / RFC §7.3.1)")
+@Tag(name = "Machines", description = "Production REST API - machines, status, cycles, pauses, stops, OEE and quality ")
 @RequiredArgsConstructor
 public class MachineController {
 
@@ -81,7 +81,7 @@ public class MachineController {
 
   @GetMapping
   @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')")
-  @Operation(summary = "List the active machines visible to the caller", description = "OPERATOR/LEADER see machines of their own sector; MANAGER sees every active machine (RN02, RN03, RN04).")
+ @Operation(summary = "List the active machines visible to the caller", description = "OPERATOR/LEADER see machines of their own sector; MANAGER sees every active machine ().")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Visible machines", content = @Content(array = @ArraySchema(schema = @Schema(implementation = MachineSummaryDTO.class)))),
       @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
@@ -96,7 +96,7 @@ public class MachineController {
 
   @GetMapping("/{machineId}/status")
   @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')")
-  @Operation(summary = "Current state and timeline of a machine", description = "Returns the open machine_status record and every transition overlapping the requested window. Scope-checked via MachineService.requireAccessible (RN02-RN04).")
+ @Operation(summary = "Current state and timeline of a machine", description = "Returns the open machine_status record and every transition overlapping the requested window. Scope-checked via MachineService.requireAccessible.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Machine status snapshot", content = @Content(schema = @Schema(implementation = MachineStatusResponseDTO.class))),
       @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
@@ -112,6 +112,7 @@ public class MachineController {
     MachineStatus open = machineStatusService.findCurrentOpen(machineId).orElse(null);
     List<MachineStatusEntryDTO> timeline = mapper.toStatusEntries(
         machineStatusService.findWindow(machineId, from, to));
+    long cyclesInWindow = productionService.countConfirmedCycles(machineId, from, to);
     return MachineStatusResponseDTO.builder()
         .machineId(machineId)
         .currentState(open == null ? null : open.getState())
@@ -119,6 +120,7 @@ public class MachineController {
         .from(from)
         .to(to)
         .timeline(timeline)
+        .cyclesInWindow(cyclesInWindow)
         .build();
   }
 
@@ -141,7 +143,7 @@ public class MachineController {
 
   @PostMapping("/{machineId}/pauses")
   @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')")
-  @Operation(summary = "Classify the latest open isolated pause (RF09, UC03)", description = "Resolves the most recent PAUSED record with reason=null on the machine and attaches the reason and author. Returns 409 when no pending pause is available.")
+ @Operation(summary = "Classify the latest open isolated pause ", description = "Resolves the most recent PAUSED record with reason=null on the machine and attaches the reason and author. Returns 409 when no pending pause is available.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Classified pause", content = @Content(schema = @Schema(implementation = MachineStatusEntryDTO.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request payload", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
@@ -162,7 +164,7 @@ public class MachineController {
 
   @PutMapping("/{machineId}/stops/{stopId}/message")
   @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')")
-  @Operation(summary = "Edit the message of an AUTO_STOPPED record (UC12, RF18, RF19)", description = "Replaces the message text and stores the author. The full audit trail is captured by AuditFilter (RF20, RN12). Returns 422 when the record is not AUTO_STOPPED.")
+ @Operation(summary = "Edit the message of an AUTO_STOPPED record ()", description = "Replaces the message text and stores the author. The full audit trail is captured by AuditFilter. Returns 422 when the record is not AUTO_STOPPED.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Updated stop record", content = @Content(schema = @Schema(implementation = MachineStatusEntryDTO.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request payload", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
@@ -184,7 +186,7 @@ public class MachineController {
 
   @GetMapping("/{machineId}/stops/{stopId}/edits")
   @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')")
-  @Operation(summary = "Edition history of an AUTO_STOPPED message (UC12, RN12)", description = "Backs the Histórico de edições block of the Modal_Change_Stop mockups (Líder/Gestor). Reconstructed from audit_log; no dedicated persistence. Sort is forced to timestamp DESC.")
+ @Operation(summary = "Edition history of an AUTO_STOPPED message ", description = "Backs the Histórico de edições block of the Modal_Change_Stop mockups (Líder/Gestor). Reconstructed from audit_log; no dedicated persistence. Sort is forced to timestamp DESC.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Page of edition entries (newest first)", content = @Content(schema = @Schema(implementation = StopEditDTO.class))),
       @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
@@ -202,7 +204,7 @@ public class MachineController {
 
   @GetMapping("/{machineId}/oee")
   @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')")
-  @Operation(summary = "OEE result for a machine over a window (RF10)", description = "Availability x Performance x Quality. When no quality_record covers the window the response is partial (Quality and OEE null).")
+ @Operation(summary = "OEE result for a machine over a window ", description = "Availability x Performance x Quality. When no quality_record covers the window the response is partial (Quality and OEE null).")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "OEE result", content = @Content(schema = @Schema(implementation = OeeResultDTO.class))),
       @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
@@ -220,7 +222,7 @@ public class MachineController {
 
   @PostMapping("/{machineId}/quality")
   @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')")
-  @Operation(summary = "Register good/total quality counts (RF10 quality factor)", description = "Persists quality counts produced during a production order so OEE can complete the calculation for periods covered by the record.")
+ @Operation(summary = "Register good/total quality counts (quality factor)", description = "Persists quality counts produced during a production order so OEE can complete the calculation for periods covered by the record.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Stored quality record id", content = @Content(schema = @Schema(implementation = QualityRecord.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request payload", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
@@ -239,7 +241,7 @@ public class MachineController {
 
   @GetMapping("/{machineId}/detail")
   @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')")
-  @Operation(summary = "Machine detail with detection parameters (EP-BE-08)", description = "Returns the full Machine projection with standardCycleMs, toleranceFactor, consecutivePausesToStop and offlineWindowMs. Scope-checked via MachineService.requireAccessible (RN02-RN04).")
+ @Operation(summary = "Machine detail with detection parameters ", description = "Returns the full Machine projection with standardCycleMs, toleranceFactor, consecutivePausesToStop and offlineWindowMs. Scope-checked via MachineService.requireAccessible.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Machine detail", content = @Content(schema = @Schema(implementation = MachineDetailResponseDTO.class))),
       @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
@@ -255,7 +257,7 @@ public class MachineController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize("hasRole('MANAGER')")
-  @Operation(summary = "Register a machine (EP-BE-08)", description = "Validates uniqueness of the short code. The machine is created active.")
+ @Operation(summary = "Register a machine ", description = "Validates uniqueness of the short code. The machine is created active.")
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Machine created", content = @Content(schema = @Schema(implementation = MachineDetailResponseDTO.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request payload", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
@@ -279,7 +281,7 @@ public class MachineController {
 
   @PutMapping("/{machineId}")
   @PreAuthorize("hasRole('MANAGER')")
-  @Operation(summary = "Update machine parameters (EP-BE-08)", description = "Code is immutable - it identifies the machine on the MQTT payload (RFC §5.3) and on historical cycles.")
+ @Operation(summary = "Update machine parameters ", description = "Code is immutable - it identifies the machine on the MQTT payload and on historical cycles.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Machine updated", content = @Content(schema = @Schema(implementation = MachineDetailResponseDTO.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request payload", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
@@ -308,7 +310,7 @@ public class MachineController {
   @DeleteMapping("/{machineId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("hasRole('MANAGER')")
-  @Operation(summary = "Soft-delete a machine (EP-BE-08)", description = "Flips active to false. Preserves cycle history and audit traceability.")
+ @Operation(summary = "Soft-delete a machine ", description = "Flips active to false. Preserves cycle history and audit traceability.")
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Machine soft-deleted"),
       @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
