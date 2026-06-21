@@ -23,9 +23,9 @@ import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Owns access to {@link ProductionOrderCacheRepository} (sub-task 3).
- * Reads are scoped per : MANAGER sees every cached order; OPERATOR
- * and LEADER only see orders bound to machines in their sector (resolved via
+ * Owns access to {@link ProductionOrderCacheRepository}. Reads are scoped
+ * per role: MANAGER sees every cached order; OPERATOR and LEADER only see
+ * orders bound to machines in their sector (resolved via
  * {@link MachineService#findAccessible}).
  */
 @Service

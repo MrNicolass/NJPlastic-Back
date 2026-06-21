@@ -26,9 +26,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Application user. Maps to the "users" table created by V1__init.sql.
- * Referential integrity for user_id elsewhere is enforced in the service
- * layer (see - "no REFERENCES in PostgreSQL").
+ * Application user. Maps to the "users" table. Referential integrity for
+ * user_id elsewhere is enforced in the service layer (no REFERENCES in
+ * PostgreSQL).
  */
 @Entity
 @Table(name = "users")

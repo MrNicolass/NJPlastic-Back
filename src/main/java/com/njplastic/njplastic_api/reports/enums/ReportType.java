@@ -4,9 +4,9 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * Category of a scheduled report (sub-task 5). Each type drives a
- * distinct renderer in {@code ReportGenerationService}. Follows the
- * project-wide enum convention: description equals {@link #name},
+ * Category of a scheduled report. Each type drives a distinct renderer in
+ * {@code ReportGenerationService}. Follows the project-wide enum
+ * convention: description equals {@link #name},
  * {@link #findByDescription(String)} powers inbound payload parsing.
  */
 public enum ReportType {

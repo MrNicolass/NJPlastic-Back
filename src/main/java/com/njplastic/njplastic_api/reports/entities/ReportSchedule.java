@@ -24,10 +24,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Manager-defined schedule executed by {@code ReportSchedulerJob}
- * (sub-task 5). Maps to {@code report_schedule} from V10.
- * {@code params} is a free-form JSON document carrying inputs the renderer
- * needs (e.g. SHIFT report -> sector and shift labels).
+ * Manager-defined schedule executed by {@code ReportSchedulerJob}. Maps to
+ * {@code report_schedule}. {@code params} is a free-form JSON document
+ * carrying inputs the renderer needs (e.g. SHIFT report -> sector and shift
+ * labels).
  */
 @Entity
 @Table(name = "report_schedule")

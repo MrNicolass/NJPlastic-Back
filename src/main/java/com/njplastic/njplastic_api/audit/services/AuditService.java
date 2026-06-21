@@ -50,8 +50,9 @@ public class AuditService {
   }
 
  /**
- * Paginated read of the audit trail with optional filters (* sub-task 4). Used by {@code GET /audit-logs}. The audit table stays
- * append-only - this method is strictly read-side.
+ * Paginated read of the audit trail with optional filters. Used by
+ * {@code GET /audit-logs}. The audit table stays append-only - this
+ * method is strictly read-side.
  *
  * @param userId optional author UUID filter
  * @param endpoint optional endpoint substring filter (case-insensitive)

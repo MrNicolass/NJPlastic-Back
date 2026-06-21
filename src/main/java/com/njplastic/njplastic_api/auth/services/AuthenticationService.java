@@ -18,8 +18,8 @@ import lombok.RequiredArgsConstructor;
 /**
  * Validates credentials and issues JWTs. Always throws
  * {@link InvalidCredentialsException} - whether the login does not exist,
- * the user is inactive, or the password does not match - aligned with RFC
- * OWASP A07 to prevent user enumeration.
+ * the user is inactive, or the password does not match - to prevent user
+ * enumeration (OWASP A07).
  */
 @Service
 @RequiredArgsConstructor

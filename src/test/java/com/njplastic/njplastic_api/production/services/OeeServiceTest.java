@@ -87,9 +87,10 @@ class OeeServiceTest {
 
     assertThat(result.isPartial()).isTrue();
     assertThat(result.getQuality()).isNull();
-    assertThat(result.getOee()).isNull();
     assertThat(result.getAvailability()).isEqualTo(1.0);
     assertThat(result.getPerformance()).isGreaterThan(0.0);
+    assertThat(result.getOee())
+        .isEqualTo(result.getAvailability() * result.getPerformance());
     assertThat(result.getMachineId()).isEqualTo(MACHINE_ID);
     assertThat(result.getPeriodStart()).isEqualTo(FROM);
     assertThat(result.getPeriodEnd()).isEqualTo(TO);
@@ -146,6 +147,7 @@ class OeeServiceTest {
 
     assertThat(result.isPartial()).isTrue();
     assertThat(result.getQuality()).isNull();
+    assertThat(result.getOee()).isEqualTo(0.0);
   }
 
   private static org.assertj.core.data.Offset<Double> within(double tolerance) {

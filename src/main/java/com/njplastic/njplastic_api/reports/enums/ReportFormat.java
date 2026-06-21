@@ -4,9 +4,9 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * Output format for a scheduled report (sub-task 5). The MVP renderer
- * supports CSV end-to-end; PDF and XLSX are accepted at the API surface but
- * generation is deferred until the artifact-rendering library is added.
+ * Output format for a scheduled report. The MVP renderer supports CSV
+ * end-to-end; PDF and XLSX are accepted at the API surface but generation
+ * is deferred until the artifact-rendering library is added.
  */
 public enum ReportFormat {
 

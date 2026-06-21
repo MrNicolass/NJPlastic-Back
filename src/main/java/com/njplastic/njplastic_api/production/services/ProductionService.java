@@ -210,10 +210,8 @@ public class ProductionService {
   }
 
  /**
- * Reconstruct the full TIMESTAMPTZ from the Arduino "HH:MM:SS" wall-clock time
- * and
- * the local date, handling the day-rollover edge near midnight (RFC
- *).
+ * Reconstruct the full TIMESTAMPTZ from the Arduino "HH:MM:SS" wall-clock
+ * time and the local date, handling the day-rollover edge near midnight.
  *
  * @param generatedAt wall-clock time in HH:MM:SS
  * @param receivedAt the instant the pulse reached the backend

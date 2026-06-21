@@ -29,14 +29,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Production order endpoint (sub-task 3). Reads the local
- * {@code production_order_cache} without round-tripping the ERP. Scope is
- * enforced per : MANAGER sees everything; OPERATOR/LEADER only see
- * orders bound to machines in their sector.
+ * Production order endpoint. Reads the local {@code production_order_cache}
+ * without round-tripping the ERP. Scope is enforced per role: MANAGER sees
+ * everything; OPERATOR/LEADER only see orders bound to machines in their
+ * sector.
  */
 @RestController
 @RequestMapping("/production-orders")
-@Tag(name = "Production Orders", description = "Production order cache reads (mockup OS_Part1/2_V1)")
+@Tag(name = "Production Orders", description = "Production order cache reads")
 @RequiredArgsConstructor
 public class ProductionOrderController {
 

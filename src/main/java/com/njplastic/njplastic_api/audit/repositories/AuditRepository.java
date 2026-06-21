@@ -20,7 +20,7 @@ import com.njplastic.njplastic_api.audit.entities.AuditLog;
  * inherited insert path and read-side queries are used; no update or delete
  * operation is declared, preserving the immutability of the audit trail.
  * {@link JpaSpecificationExecutor} powers the paginated/filtered admin read
- * exposed by {@code GET /audit-logs} (sub-task 4).
+ * exposed by {@code GET /audit-logs}.
  */
 @Repository
 public interface AuditRepository extends JpaRepository<AuditLog, UUID>, JpaSpecificationExecutor<AuditLog> {

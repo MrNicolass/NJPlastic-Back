@@ -19,7 +19,7 @@ import lombok.Setter;
 /**
  * Read-side projection of a {@link ProductionOrderCache} row. Carries the
  * fields the frontend needs to render the production-order list and detail
- * screens (mockup OS_Part1/2_V1) without exposing the raw JSON payload mirror.
+ * screens without exposing the raw JSON payload mirror.
  */
 @Schema(description = "Production order cache projection")
 @Getter

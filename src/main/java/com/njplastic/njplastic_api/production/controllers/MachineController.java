@@ -22,7 +22,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njplastic.njplastic_api.auth.dtos.OperatorOfShiftDTO;
 import com.njplastic.njplastic_api.auth.security.AuthenticatedUser;
+import com.njplastic.njplastic_api.auth.services.UserService;
 import com.njplastic.njplastic_api.common.dtos.ErrorResponseDTO;
 import com.njplastic.njplastic_api.production.dtos.EditStopMessageRequestDTO;
 import com.njplastic.njplastic_api.production.dtos.MachineDetailResponseDTO;
@@ -46,6 +48,7 @@ import com.njplastic.njplastic_api.production.services.OeeService;
 import com.njplastic.njplastic_api.production.services.ProductionDtoMapper;
 import com.njplastic.njplastic_api.production.services.ProductionService;
 import com.njplastic.njplastic_api.production.services.QualityService;
+import com.njplastic.njplastic_api.production.services.ShiftResolver;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -77,6 +80,8 @@ public class MachineController {
   private final ProductionService productionService;
   private final OeeService oeeService;
   private final QualityService qualityService;
+  private final UserService userService;
+  private final ShiftResolver shiftResolver;
   private final ProductionDtoMapper mapper;
 
   @GetMapping
@@ -186,7 +191,7 @@ public class MachineController {
 
   @GetMapping("/{machineId}/stops/{stopId}/edits")
   @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')")
- @Operation(summary = "Edition history of an AUTO_STOPPED message ", description = "Backs the Histórico de edições block of the Modal_Change_Stop mockups (Líder/Gestor). Reconstructed from audit_log; no dedicated persistence. Sort is forced to timestamp DESC.")
+ @Operation(summary = "Edition history of an AUTO_STOPPED message", description = "Returns the edit history of a stop message. Reconstructed from audit_log; no dedicated persistence. Sort is forced to timestamp DESC.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Page of edition entries (newest first)", content = @Content(schema = @Schema(implementation = StopEditDTO.class))),
       @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
@@ -237,6 +242,26 @@ public class MachineController {
     Machine machine = machineService.requireAccessible(machineId, principal);
     request.setMachineId(machine.getId());
     return qualityService.registerQuality(request, principal.id());
+  }
+
+  @GetMapping("/{machineId}/operators")
+  @PreAuthorize("hasAnyRole('OPERATOR','LEADER','MANAGER')")
+  @Operation(summary = "Active operators assigned to a machine for the current shift", description = "Returns active OPERATOR users whose sector matches the machine sector and whose shift matches the requested (or current) shift, ordered by name.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Operators of the shift", content = @Content(array = @ArraySchema(schema = @Schema(implementation = OperatorOfShiftDTO.class)))),
+      @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Machine is outside the caller scope", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+      @ApiResponse(responseCode = "404", description = "Unknown machine id", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  })
+  public List<OperatorOfShiftDTO> listOperatorsOfShift(
+      @PathVariable UUID machineId,
+      @RequestParam(required = false) String shift,
+      @AuthenticationPrincipal AuthenticatedUser principal) {
+    Machine machine = machineService.requireAccessible(machineId, principal);
+    String resolvedShift = (shift == null || shift.isBlank()) ? shiftResolver.currentShift() : shift;
+    return userService.findActiveOperatorsBySectorAndShift(machine.getSector(), resolvedShift).stream()
+        .map(OperatorOfShiftDTO::from)
+        .toList();
   }
 
   @GetMapping("/{machineId}/detail")

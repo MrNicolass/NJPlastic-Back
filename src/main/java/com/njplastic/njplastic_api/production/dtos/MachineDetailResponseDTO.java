@@ -20,7 +20,7 @@ import lombok.Setter;
 /**
  * Detailed projection of a {@link Machine}. Used by {@code GET /machines/{id}}
  * and by the response of {@code POST}/{@code PUT}, carrying every operational
- * parameter that the Manager screen shows (mockup Machine_Register_Modal_*).
+ * parameter that the Manager registration screen exposes.
  */
 @Schema(description = "Full machine projection with detection parameters")
 @Getter

@@ -19,8 +19,7 @@ import lombok.Setter;
 
 /**
  * Admin-side projection of a {@link User}. Carries every field the Manager
- * needs in the {@code Users_Part1/2_V1} mockup screens, but never the
- * password hash.
+ * user-administration screens need, but never the password hash.
  */
 @Schema(description = "Admin projection of a user (no password hash)")
 @Getter

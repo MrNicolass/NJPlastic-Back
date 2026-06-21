@@ -120,8 +120,8 @@ public interface MachineStatusRepository extends JpaRepository<MachineStatus, UU
 	/**
  * Status records whose {@code startTime} falls in the window, scoped to a
  * set of machines and a set of states. Backs the Leader "Eventos recentes"
- * feed (mockup Dashboard_Part2_V1), where pauses and auto stops
- * appear when they begin and not while they remain ongoing.
+ * feed, where pauses and auto stops appear when they begin and not while
+ * they remain ongoing.
  *
  * @param machineIds accessible machines for the principal 
  * @param states PAUSED and/or AUTO_STOPPED for the recent-events feed

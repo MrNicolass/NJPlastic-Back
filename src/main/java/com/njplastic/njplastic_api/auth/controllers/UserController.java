@@ -39,13 +39,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Admin endpoint for user management (sub-task 1). Backs the
- * {@code Users_Part1/2_V1} mockup screens. Every operation is MANAGER-only
- *. Soft-delete preserves the FK semantic in {@code audit_log.user_id}.
+ * Admin endpoint for user management. Every operation is MANAGER-only.
+ * Soft-delete preserves the FK semantic in {@code audit_log.user_id}.
  */
 @RestController
 @RequestMapping("/users")
-@Tag(name = "Users", description = "User administration (mockup Users_Part1/2_V1)")
+@Tag(name = "Users", description = "User administration")
 @RequiredArgsConstructor
 public class UserController {
 

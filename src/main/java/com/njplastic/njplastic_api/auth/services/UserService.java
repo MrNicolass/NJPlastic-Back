@@ -1,6 +1,7 @@
 package com.njplastic.njplastic_api.auth.services;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -160,5 +161,18 @@ public class UserService {
  */
   public boolean existsByEmail(String email) {
     return userRepository.existsByEmail(email);
+  }
+
+ /**
+ * Active operators assigned to the given sector and shift, ordered by name.
+ * Backs the "Operators of shift" card on the machine detail screen.
+ *
+ * @param sector exact sector match (e.g. INJECAO)
+ * @param shift exact shift match (e.g. TURNO_A)
+ * @return matching active operators (may be empty)
+ */
+  public List<User> findActiveOperatorsBySectorAndShift(String sector, String shift) {
+    return userRepository.findByActiveTrueAndRoleAndSectorAndShiftOrderByNameAsc(
+        UserRole.OPERATOR, sector, shift);
   }
 }

@@ -48,12 +48,14 @@ import com.njplastic.njplastic_api.production.enums.MachineState;
 import com.njplastic.njplastic_api.production.exceptions.PauseAlreadyClassifiedException;
 import com.njplastic.njplastic_api.production.exceptions.StopMessageNotEditableException;
 import com.njplastic.njplastic_api.production.exceptions.UnknownMachineException;
+import com.njplastic.njplastic_api.auth.services.UserService;
 import com.njplastic.njplastic_api.production.services.MachineService;
 import com.njplastic.njplastic_api.production.services.MachineStatusService;
 import com.njplastic.njplastic_api.production.services.OeeService;
 import com.njplastic.njplastic_api.production.services.ProductionDtoMapper;
 import com.njplastic.njplastic_api.production.services.ProductionService;
 import com.njplastic.njplastic_api.production.services.QualityService;
+import com.njplastic.njplastic_api.production.services.ShiftResolver;
 
 @WebMvcTest(MachineController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -78,6 +80,12 @@ class MachineControllerTest {
 
   @MockitoBean
   private QualityService qualityService;
+
+  @MockitoBean
+  private UserService userService;
+
+  @MockitoBean
+  private ShiftResolver shiftResolver;
 
   @MockitoBean
   private ProductionDtoMapper mapper;

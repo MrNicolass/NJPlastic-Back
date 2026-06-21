@@ -17,11 +17,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Single entry of the Leader's "Eventos recentes" panel (RFC
- * mockup Dashboard_Part2_V1). Aggregated server-side
- * from four sources - manual events, manual pauses, auto stops and stop
- * message edits - and projected into a uniform shape so the frontend can
- * render a single timeline without fan-out fetches per machine.
+ * Single entry of the Leader's "Eventos recentes" panel. Aggregated
+ * server-side from four sources - manual events, manual pauses, auto stops
+ * and stop message edits - and projected into a uniform shape so the
+ * frontend can render a single timeline without fan-out fetches per
+ * machine.
  */
 @Schema(description = "Entry of the Leader 'Eventos recentes' panel; uniform projection of events, pauses, auto stops and stop-message edits")
 @Getter

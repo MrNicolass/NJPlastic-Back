@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
  * Owns access to {@link ReportScheduleRepository} and
  * {@link ReportHistoryRepository}. Exposes the CRUD consumed by the Manager
  * UI and the paginated read of {@code report_history} for the 90-day
- * library tab (mockup Reports_Part1_V1).
+ * library tab.
  */
 @Service
 @RequiredArgsConstructor

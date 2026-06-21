@@ -28,14 +28,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * ERP field mapping endpoint (reopened, mockup ERP_Part2_V1). Backs
- * the Manager-only drawer that edits the NJPlastic <-> ERP field
- * correspondence. The PUT replaces the full set per entity_type inside one
- * transaction; the request/response diff is captured by {@code AuditFilter}.
+ * ERP field mapping endpoint. Backs the Manager-only drawer that edits the
+ * NJPlastic <-> ERP field correspondence. The PUT replaces the full set
+ * per entity_type inside one transaction; the request/response diff is
+ * captured by {@code AuditFilter}.
  */
 @RestController
 @RequestMapping("/erp/field-mapping")
-@Tag(name = "ERP Field Mapping", description = "ERP field mapping CRUD (reopened / mockup ERP_Part2_V1)")
+@Tag(name = "ERP Field Mapping", description = "ERP field mapping CRUD")
 @RequiredArgsConstructor
 public class ErpFieldMappingController {
 
