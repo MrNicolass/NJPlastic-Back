@@ -29,40 +29,40 @@ public class ErrorResponseDTO {
   @Schema(description = "Name of the exception class that generated the error", example = "ResourceNotFoundException", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private String clazzError;
 
-  /**
-   * @return The date and time when the error occurred
-   */
+ /**
+ * @return The date and time when the error occurred
+ */
   public LocalDateTime getTimestamp() {
     return timestamp;
   }
 
-  /**
-   * @return The descriptive error message
-   */
+ /**
+ * @return The descriptive error message
+ */
   public String getMessage() {
     return message;
   }
 
-  /**
-   * @return The detailed error description
-   */
+ /**
+ * @return The detailed error description
+ */
   public String getDescription() {
     return description;
   }
 
-  /**
-   * @return The name of the exception class that generated the error
-   */
+ /**
+ * @return The name of the exception class that generated the error
+ */
   public String getClazzError() {
     return clazzError;
   }
 
-  /**
-   * Private constructor that receives a Builder for creating the response
-   *
-   * @param builder
-   *                The builder with the data for creating the error response
-   */
+ /**
+ * Private constructor that receives a Builder for creating the response
+ *
+ * @param builder
+ * The builder with the data for creating the error response
+ */
   private ErrorResponseDTO(Builder builder) {
     this.timestamp = LocalDateTime.now();
     this.message = builder.message;
@@ -70,9 +70,9 @@ public class ErrorResponseDTO {
     this.clazzError = builder.clazzError;
   }
 
-  /**
-   * @return A new builder for creating instances of ErrorResponseDTO
-   */
+ /**
+ * @return A new builder for creating instances of ErrorResponseDTO
+ */
   public static Builder builder() {
     return new Builder();
   }
@@ -88,10 +88,10 @@ public class ErrorResponseDTO {
     return sb.toString();
   }
 
-  /**
-   * Builder to facilitate the creation of ErrorResponseDTO instances Implements
-   * the Builder pattern for fluent construction of ErrorResponseDTO objects
-   */
+ /**
+ * Builder to facilitate the creation of ErrorResponseDTO instances Implements
+ * the Builder pattern for fluent construction of ErrorResponseDTO objects
+ */
   @Schema(description = "Builder for creating error responses")
   public static class Builder {
     @Schema(description = "Descriptive error message")
@@ -106,47 +106,47 @@ public class ErrorResponseDTO {
     @Schema(description = "Date and time when the error occurred")
     private LocalDateTime timestamp;
 
-    /**
-     * Sets the error message
-     *
-     * @param message
-     *                The error message
-     * @return The builder itself for method chaining
-     */
+ /**
+ * Sets the error message
+ *
+ * @param message
+ * The error message
+ * @return The builder itself for method chaining
+ */
     public Builder message(String message) {
       this.message = message;
       return this;
     }
 
-    /**
-     * Sets the error class name
-     *
-     * @param clazzError
-     *                   The name of the error class
-     * @return The builder itself for method chaining
-     */
+ /**
+ * Sets the error class name
+ *
+ * @param clazzError
+ * The name of the error class
+ * @return The builder itself for method chaining
+ */
     public Builder clazzError(String clazzError) {
       this.clazzError = clazzError;
       return this;
     }
 
-    /**
-     * Sets the error description
-     *
-     * @param description
-     *                    The error description
-     * @return The builder itself for method chaining
-     */
+ /**
+ * Sets the error description
+ *
+ * @param description
+ * The error description
+ * @return The builder itself for method chaining
+ */
     public Builder description(String description) {
       this.description = description;
       return this;
     }
 
-    /**
-     * Builds an instance of ErrorResponseDTO with the configured data
-     *
-     * @return A new instance of ErrorResponseDTO
-     */
+ /**
+ * Builds an instance of ErrorResponseDTO with the configured data
+ *
+ * @return A new instance of ErrorResponseDTO
+ */
     public ErrorResponseDTO build() {
       return new ErrorResponseDTO(this);
     }

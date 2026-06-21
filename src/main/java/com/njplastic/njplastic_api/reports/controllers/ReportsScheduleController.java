@@ -45,14 +45,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Report scheduling endpoint (EP-BE-08 sub-task 5). Backs the Manager-only
- * scheduling cards and the LEADER/MANAGER library tab from the Reports screen
- * (mockup Reports_Part1/2_V1). Actual generation lives in
+ * Report scheduling endpoint. Backs the Manager-only scheduling cards and
+ * the LEADER/MANAGER library tab. Actual generation lives in
  * {@code ReportSchedulerJob}.
  */
 @RestController
 @RequestMapping("/reports")
-@Tag(name = "Reports Schedule", description = "Report library and scheduling (EP-BE-08 / mockup Reports_Part1/2_V1)")
+@Tag(name = "Reports Schedule", description = "Report library and scheduling")
 @RequiredArgsConstructor
 public class ReportsScheduleController {
 
@@ -116,7 +115,7 @@ public class ReportsScheduleController {
 
   @GetMapping("/schedule")
   @PreAuthorize("hasRole('MANAGER')")
-  @Operation(summary = "List active schedules", description = "Backs the Manager-only schedules grid (mockup Reports_Part2_V1).")
+  @Operation(summary = "List active schedules", description = "Backs the Manager-only schedules grid.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Active schedules", content = @Content(schema = @Schema(implementation = ReportScheduleResponseDTO.class))),
       @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),

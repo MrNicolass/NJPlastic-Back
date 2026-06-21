@@ -31,7 +31,7 @@ import com.njplastic.njplastic_api.production.repositories.ProductionRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Sole owner of the production business rules (RN05-RN12). Owns
+ * Sole owner of the production business rules. Owns
  * {@link ProductionRepository} (production_cycle) and orchestrates machine
  * lookup,
  * timestamp reconstruction, clock-drift rejection, cycle-time computation,
@@ -52,15 +52,15 @@ public class ProductionService {
   private final MachineStatusService machineStatusService;
   private final ProductionProperties properties;
 
-  /**
-   * Process one MQTT pulse: validate the clock, persist the cycle and update the
-   * machine state (RN05-RN12, RF08, RF17). Runs on the MQTT client thread,
-   * outside
-   * the web request scope.
-   *
-   * @param payload    the deserialized pulse payload
-   * @param receivedAt the instant the pulse reached the backend
-   */
+ /**
+ * Process one MQTT pulse: validate the clock, persist the cycle and update the
+ * machine state. Runs on the MQTT client thread,
+ * outside
+ * the web request scope.
+ *
+ * @param payload the deserialized pulse payload
+ * @param receivedAt the instant the pulse reached the backend
+ */
   @Transactional
   public void processPulse(PulsePayload payload, OffsetDateTime receivedAt) {
     Optional<Machine> machineLookup = machineService.findActiveByCode(payload.getMachineCode());
@@ -86,7 +86,7 @@ public class ProductionService {
       ProductionCycle discarded = buildCycle(machine, pulseTimestamp, receivedAt, sequence, null,
           RecordState.DISCARDED);
       productionRepository.save(discarded);
-      LOGGER.warn("Discarded pulse for machine [{}]: clock drift {} ms exceeds tolerance {} ms (RN05)",
+ LOGGER.warn("Discarded pulse for machine [{}]: clock drift {} ms exceeds tolerance {} ms ",
           machine.getCode(), driftMs, properties.clockToleranceMs());
       return;
     }
@@ -118,70 +118,70 @@ public class ProductionService {
       machineStatusService.recordPauseUnderStop(machine, gapStart, pulseTimestamp, newCount);
     } else if (newCount >= machine.getConsecutivePausesToStop()) {
       machineStatusService.recordAutoStop(machine, gapStart, pulseTimestamp, newCount, properties.autoStopMessage());
-      LOGGER.info("Machine [{}] auto-stopped after {} consecutive pauses (RN09, RF17)",
+ LOGGER.info("Machine [{}] auto-stopped after {} consecutive pauses ",
           machine.getCode(), newCount);
     } else {
       machineStatusService.recordIsolatedPause(machine, gapStart, pulseTimestamp, newCount);
     }
   }
 
-  /**
-   * Instant the most recent pulse was received for a machine, used by the
-   * watchdog.
-   *
-   * @param machineId the machine UUID
-   * @return the last received instant, or empty when the machine has no cycles
-   *         yet
-   */
+ /**
+ * Instant the most recent pulse was received for a machine, used by the
+ * watchdog.
+ *
+ * @param machineId the machine UUID
+ * @return the last received instant, or empty when the machine has no cycles
+ * yet
+ */
   public Optional<OffsetDateTime> lastReceivedAt(UUID machineId) {
     return productionRepository.findTopByMachineIdOrderByReceivedAtDesc(machineId)
         .map(ProductionCycle::getReceivedAt);
   }
 
-  /**
-   * Count confirmed cycles for a machine within a window, used by OEE (RF10).
-   *
-   * @param machineId the machine UUID
-   * @param from      window start
-   * @param to        window end
-   * @return the number of confirmed cycles in the window
-   */
+ /**
+ * Count confirmed cycles for a machine within a window, used by OEE.
+ *
+ * @param machineId the machine UUID
+ * @param from window start
+ * @param to window end
+ * @return the number of confirmed cycles in the window
+ */
   public long countConfirmedCycles(UUID machineId, OffsetDateTime from, OffsetDateTime to) {
     return productionRepository.countByMachineIdAndStateAndPulseTimestampBetween(
         machineId, RecordState.CONFIRMED, from, to);
   }
 
-  /**
-   * Paginated history of production cycles for a machine, exposed by the
-   * REST controller (RF11). The page sort is controlled by the caller.
-   *
-   * @param machineId the machine UUID
-   * @param pageable  the page request (page, size, sort)
-   * @return the requested page of cycles
-   */
+ /**
+ * Paginated history of production cycles for a machine, exposed by the
+ * REST controller. The page sort is controlled by the caller.
+ *
+ * @param machineId the machine UUID
+ * @param pageable the page request (page, size, sort)
+ * @return the requested page of cycles
+ */
   public Page<ProductionCycle> findCycles(UUID machineId, Pageable pageable) {
     return productionRepository.findByMachineId(machineId, pageable);
   }
 
-  /**
-   * Confirmed cycles waiting to be written to the ERP, ordered by pulse
-   * timestamp ascending. The page size caps the batch the ERP sync writes per
-   * window (RF14, RN07). Sole consumer is {@code ErpSyncService}.
-   *
-   * @param pageable the page request
-   * @return confirmed cycles waiting to be synced
-   */
+ /**
+ * Confirmed cycles waiting to be written to the ERP, ordered by pulse
+ * timestamp ascending. The page size caps the batch the ERP sync writes per
+ * window. Sole consumer is {@code ErpSyncService}.
+ *
+ * @param pageable the page request
+ * @return confirmed cycles waiting to be synced
+ */
   public List<ProductionCycle> findConfirmedAwaitingSync(Pageable pageable) {
     return productionRepository.findByStateOrderByPulseTimestampAsc(RecordState.CONFIRMED, pageable);
   }
 
-  /**
-   * Transition the given cycles from CONFIRMED to SYNCED after the ERP write
-   * acknowledged them (RN07). ProductionService is the sole owner of the
-   * record_state transition, so callers must come through this method.
-   *
-   * @param cycles the cycles to mark
-   */
+ /**
+ * Transition the given cycles from CONFIRMED to SYNCED after the ERP write
+ * acknowledged them. ProductionService is the sole owner of the
+ * record_state transition, so callers must come through this method.
+ *
+ * @param cycles the cycles to mark
+ */
   @Transactional
   public void markCyclesAsSynced(Collection<ProductionCycle> cycles) {
     if (cycles.isEmpty()) {
@@ -193,32 +193,30 @@ public class ProductionService {
     productionRepository.saveAll(cycles);
   }
 
-  /**
-   * Confirmed cycles of a machine in {@code [from, to]} ordered by pulse
-   * timestamp ascending. Used by the shift report (RF15) and any caller
-   * that needs the cycle list of a window.
-   *
-   * @param machineId the machine UUID
-   * @param from      window start
-   * @param to        window end
-   * @return confirmed cycles in the window
-   */
+ /**
+ * Confirmed cycles of a machine in {@code [from, to]} ordered by pulse
+ * timestamp ascending. Used by the shift report and any caller
+ * that needs the cycle list of a window.
+ *
+ * @param machineId the machine UUID
+ * @param from window start
+ * @param to window end
+ * @return confirmed cycles in the window
+ */
   public List<ProductionCycle> findConfirmedCyclesWindow(UUID machineId, OffsetDateTime from, OffsetDateTime to) {
     return productionRepository
         .findByMachineIdAndStateAndPulseTimestampBetweenOrderByPulseTimestampAsc(
             machineId, RecordState.CONFIRMED, from, to);
   }
 
-  /**
-   * Reconstruct the full TIMESTAMPTZ from the Arduino "HH:MM:SS" wall-clock time
-   * and
-   * the local date, handling the day-rollover edge near midnight (RN05, RFC
-   * §5.3).
-   *
-   * @param generatedAt wall-clock time in HH:MM:SS
-   * @param receivedAt  the instant the pulse reached the backend
-   * @return the reconstructed pulse timestamp
-   */
+ /**
+ * Reconstruct the full TIMESTAMPTZ from the Arduino "HH:MM:SS" wall-clock
+ * time and the local date, handling the day-rollover edge near midnight.
+ *
+ * @param generatedAt wall-clock time in HH:MM:SS
+ * @param receivedAt the instant the pulse reached the backend
+ * @return the reconstructed pulse timestamp
+ */
   private OffsetDateTime reconstructTimestamp(String generatedAt, OffsetDateTime receivedAt) {
     ZoneId zone = ZoneId.of(properties.timezone());
     LocalTime time = LocalTime.parse(generatedAt);
@@ -230,16 +228,16 @@ public class ProductionService {
     return date.atTime(time).atZone(zone).toOffsetDateTime();
   }
 
-  /**
-   * Length of the current streak of most-recent confirmed cycles whose interval
-   * exceeds the pause threshold (RN06, RN09, RN11). Derived from production_cycle
-   * so
-   * it is durable and independent of the status timeline.
-   *
-   * @param machine     the owning machine
-   * @param thresholdMs the pause threshold in milliseconds
-   * @return the consecutive-pause count including the current cycle
-   */
+ /**
+ * Length of the current streak of most-recent confirmed cycles whose interval
+ * exceeds the pause threshold. Derived from production_cycle
+ * so
+ * it is durable and independent of the status timeline.
+ *
+ * @param machine the owning machine
+ * @param thresholdMs the pause threshold in milliseconds
+ * @return the consecutive-pause count including the current cycle
+ */
   private int consecutivePauseCount(Machine machine, long thresholdMs) {
     List<ProductionCycle> recent = productionRepository.findByMachineIdAndStateOrderByPulseTimestampDesc(
         machine.getId(), RecordState.CONFIRMED, PageRequest.of(0, properties.pauseScanLimit()));

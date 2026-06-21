@@ -39,7 +39,7 @@ public class MachineStatusEntryDTO {
   @Schema(description = "Classification reason for PAUSED/AUTO_STOPPED records", example = "TROCA_DE_MOLDE", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
   private String reason;
 
-  @Schema(description = "Editable message for AUTO_STOPPED records (RF18, RF19)", example = "Stop detected automatically after 3 consecutive pauses", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
+ @Schema(description = "Editable message for AUTO_STOPPED records ", example = "Stop detected automatically after 3 consecutive pauses", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
   private String message;
 
   @Schema(description = "Transition start timestamp", example = "2026-05-28T14:25:00Z", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
@@ -48,10 +48,10 @@ public class MachineStatusEntryDTO {
   @Schema(description = "Transition end timestamp; null while the state is active", example = "2026-05-28T14:40:00Z", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
   private OffsetDateTime endTime;
 
-  @Schema(description = "Author UUID of the last message edition (RN12)", example = "3f1c2b9e-7a4d-4e2a-9b8c-1d2e3f4a5b6c", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
+ @Schema(description = "Author UUID of the last message edition ", example = "3f1c2b9e-7a4d-4e2a-9b8c-1d2e3f4a5b6c", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
   private UUID reasonAuthorId;
 
-  @Schema(description = "Consecutive-pause counter value when this record was created (RN09-RN11)", example = "3", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
+ @Schema(description = "Consecutive-pause counter value when this record was created ", example = "3", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
   private Integer consecutiveCountAtCreation;
 
   @Override

@@ -22,7 +22,7 @@ import lombok.Setter;
  * Create payload for {@code POST /machines}. Validates the business
  * invariants explicitly: {@code toleranceFactor > 1.0} (a factor below 1
  * would mean every cycle is a pause) and {@code consecutivePausesToStop >= 1}
- * (RN09 requires at least one pause to escalate).
+ * (requires at least one pause to escalate).
  */
 @Schema(description = "Machine creation payload")
 @Getter
@@ -45,17 +45,17 @@ public class MachineRequestDTO {
   @Size(max = 64)
   private String sector;
 
-  @Schema(description = "Standard cycle time in milliseconds (RN06)", example = "2000", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
+ @Schema(description = "Standard cycle time in milliseconds ", example = "2000", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
   @NotNull
   @Min(1)
   private Integer standardCycleMs;
 
-  @Schema(description = "Tolerance factor applied over the standard cycle for pause detection (RN06). Must be greater than 1.0.", example = "1.50", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
+ @Schema(description = "Tolerance factor applied over the standard cycle for pause detection. Must be greater than 1.0.", example = "1.50", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
   @NotNull
   @DecimalMin(value = "1.01", inclusive = true)
   private BigDecimal toleranceFactor;
 
-  @Schema(description = "Consecutive pauses required to escalate to AUTO_STOPPED (RN09, RF17)", example = "3", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
+ @Schema(description = "Consecutive pauses required to escalate to AUTO_STOPPED ", example = "3", requiredMode = REQUIRED, accessMode = WRITE_ONLY, nullable = false)
   @NotNull
   @Min(1)
   private Integer consecutivePausesToStop;

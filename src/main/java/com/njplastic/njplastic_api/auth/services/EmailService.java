@@ -16,12 +16,12 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Outbound email gateway (EP-BE-02 reopened). Wraps Spring's
+ * Outbound email gateway (reopened). Wraps Spring's
  * {@link JavaMailSender} so domain code never depends on Jakarta Mail directly.
  * Two product flows live here:
  * <ul>
  * <li>Password reset email - delivered after {@code POST /auth/password-reset};</li>
- * <li>Scheduled report delivery - attaches PDF/CSV/XLSX (EP-BE-08).</li>
+ * <li>Scheduled report delivery - attaches PDF/CSV/XLSX.</li>
  * </ul>
  *
  * <p>
@@ -42,13 +42,13 @@ public class EmailService {
   private final JavaMailSender mailSender;
   private final EmailProperties properties;
 
-  /**
-   * Send a password reset email containing a clickable link with the given
-   * opaque token. The link target is built from {@code app.mail.password-reset-base-url}.
-   *
-   * @param to    destination email address (already validated upstream)
-   * @param token opaque token persisted on {@code password_reset_token}
-   */
+ /**
+ * Send a password reset email containing a clickable link with the given
+ * opaque token. The link target is built from {@code app.mail.password-reset-base-url}.
+ *
+ * @param to destination email address (already validated upstream)
+ * @param token opaque token persisted on {@code password_reset_token}
+ */
   public void sendPasswordReset(String to, String token) {
     String resetUrl = properties.passwordResetBaseUrl() + "?token=" + token;
     String body = """
@@ -68,16 +68,16 @@ public class EmailService {
     sendPlain(to, "NJPlastic - Password reset", body);
   }
 
-  /**
-   * Send a generated report as an email attachment.
-   *
-   * @param to       destination email address
-   * @param subject  email subject line (e.g. "Shift report - 2026-06-01")
-   * @param body     plain text body shown above the attachment
-   * @param file     report bytes
-   * @param filename suggested filename (e.g. "shift_2026-06-01.pdf")
-   * @param mimeType IANA mime type (e.g. "application/pdf")
-   */
+ /**
+ * Send a generated report as an email attachment.
+ *
+ * @param to destination email address
+ * @param subject email subject line (e.g. "Shift report - 2026-06-01")
+ * @param body plain text body shown above the attachment
+ * @param file report bytes
+ * @param filename suggested filename (e.g. "shift_2026-06-01.pdf")
+ * @param mimeType IANA mime type (e.g. "application/pdf")
+ */
   public void sendReportDelivery(String to, String subject, String body, byte[] file, String filename, String mimeType) {
     try {
       MimeMessage message = mailSender.createMimeMessage();

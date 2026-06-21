@@ -28,14 +28,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * ERP field mapping endpoint (EP-BE-06 reopened, mockup ERP_Part2_V1). Backs
- * the Manager-only drawer that edits the NJPlastic <-> ERP field
- * correspondence. The PUT replaces the full set per entity_type inside one
- * transaction; the request/response diff is captured by {@code AuditFilter}.
+ * ERP field mapping endpoint. Backs the Manager-only drawer that edits the
+ * NJPlastic <-> ERP field correspondence. The PUT replaces the full set
+ * per entity_type inside one transaction; the request/response diff is
+ * captured by {@code AuditFilter}.
  */
 @RestController
 @RequestMapping("/erp/field-mapping")
-@Tag(name = "ERP Field Mapping", description = "ERP field mapping CRUD (EP-BE-06 reopened / mockup ERP_Part2_V1)")
+@Tag(name = "ERP Field Mapping", description = "ERP field mapping CRUD")
 @RequiredArgsConstructor
 public class ErpFieldMappingController {
 
@@ -57,7 +57,7 @@ public class ErpFieldMappingController {
 
   @PutMapping
   @PreAuthorize("hasRole('MANAGER')")
-  @Operation(summary = "Replace every mapping under one entity_type", description = "Atomic replace-all: prior rows for the entity_type are dropped and the new list is inserted. The audit trail is captured by AuditFilter (RF20, RN12).")
+ @Operation(summary = "Replace every mapping under one entity_type", description = "Atomic replace-all: prior rows for the entity_type are dropped and the new list is inserted. The audit trail is captured by AuditFilter.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Resulting mapping list", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ErpFieldMappingDTO.class)))),
       @ApiResponse(responseCode = "400", description = "Invalid request payload", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),

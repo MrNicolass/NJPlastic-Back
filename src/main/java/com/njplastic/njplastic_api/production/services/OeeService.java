@@ -16,12 +16,14 @@ import com.njplastic.njplastic_api.production.exceptions.UnknownMachineException
 import lombok.RequiredArgsConstructor;
 
 /**
- * Computes OEE (Availability x Performance x Quality, RF10) for a machine over
+ * Computes OEE (Availability x Performance x Quality) for a machine over
  * a window. Availability and Performance always come from production_cycle and
- * machine_status; the Quality factor is optional and read from quality_record,
- * so the result is returned as partial (Quality and OEE null) until a user
- * registers the counts at the end of a production order. Owns no repository -
- * it orchestrates the production aggregates through their services.
+ * machine_status; the Quality factor is optional and read from quality_record.
+ * When no quality record overlaps the window the result is flagged as partial
+ * and OEE is computed assuming Q = 1.0, so the UI can display a provisional
+ * percentage while keeping the partial flag as the single source of truth for
+ * "no quality data yet". Owns no repository - it orchestrates the production
+ * aggregates through their services.
  */
 @Service
 @RequiredArgsConstructor
@@ -32,15 +34,16 @@ public class OeeService {
   private final MachineStatusService machineStatusService;
   private final QualityService qualityService;
 
-  /**
-   * Compute the OEE for a machine within [from, to] (RF10).
-   *
-   * @param machineId the machine UUID
-   * @param from      window start
-   * @param to        window end
-   * @return the OEE result, possibly partial when no quality data covers the
-   *         window
-   */
+ /**
+ * Compute the OEE for a machine within [from, to]. When no quality record
+ * overlaps the window the result is marked partial and OEE assumes Q = 1.0.
+ *
+ * @param machineId the machine UUID
+ * @param from window start
+ * @param to window end
+ * @return the OEE result, with partial=true when no quality data covers the
+ * window
+ */
   public OeeResultDTO calculate(UUID machineId, OffsetDateTime from, OffsetDateTime to) {
     Machine machine = machineService.findById(machineId)
         .orElseThrow(() -> new UnknownMachineException("Machine not found: " + machineId));
@@ -54,7 +57,7 @@ public class OeeService {
           .availability(0.0)
           .performance(0.0)
           .quality(null)
-          .oee(null)
+          .oee(0.0)
           .partial(true)
           .build();
     }
@@ -69,7 +72,8 @@ public class OeeService {
 
     Double quality = quality(machineId, from, to);
     boolean partial = quality == null;
-    Double oee = partial ? null : availability * performance * quality;
+    double qualityFactor = partial ? 1.0 : quality;
+    Double oee = availability * performance * qualityFactor;
 
     return OeeResultDTO.builder()
         .machineId(machineId)

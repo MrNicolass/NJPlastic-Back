@@ -27,16 +27,31 @@ public interface MachineStatusRepository extends JpaRepository<MachineStatus, UU
 			UUID machineId, MachineState state);
 
 	/**
-	 * Status records of a machine whose window overlaps {@code [from, to]},
-	 * regardless of state. A record overlaps when it starts before the window
-	 * ends and is either still open or ends after the window starts. Used to
-	 * build the status timeline and the shift report (RF15).
-	 *
-	 * @param machineId the machine UUID
-	 * @param from      window start
-	 * @param to        window end
-	 * @return overlapping records ordered by start time
-	 */
+ * Most recent closed status record of a machine in the given state whose
+ * {@code endTime} matches the supplied instant. Sole purpose is the merge of
+ * contiguous PAUSED segments in {@code MachineStatusService}: when a new gap
+ * starts exactly where the previous one ended, the previous record is
+ * extended instead of producing a duplicate row.
+ *
+ * @param machineId the machine UUID
+ * @param state the operational state to match
+ * @param endTime the exact {@code endTime} to match
+ * @return the contiguous-tail record, if any
+ */
+	Optional<MachineStatus> findTopByMachineIdAndStateAndEndTimeOrderByStartTimeDesc(
+			UUID machineId, MachineState state, OffsetDateTime endTime);
+
+	/**
+ * Status records of a machine whose window overlaps {@code [from, to]},
+ * regardless of state. A record overlaps when it starts before the window
+ * ends and is either still open or ends after the window starts. Used to
+ * build the status timeline and the shift report.
+ *
+ * @param machineId the machine UUID
+ * @param from window start
+ * @param to window end
+ * @return overlapping records ordered by start time
+ */
 	@Query("""
 			SELECT ms FROM MachineStatus ms
 			WHERE ms.machineId = :machineId
@@ -50,16 +65,16 @@ public interface MachineStatusRepository extends JpaRepository<MachineStatus, UU
 			@Param("to") OffsetDateTime to);
 
 	/**
-	 * Status records of a machine in the given states whose window overlaps
-	 * {@code [from, to]}. Used by the shift report (RF15) to list manual
-	 * pauses and auto stops separately.
-	 *
-	 * @param machineId the machine UUID
-	 * @param states    the operational states to include
-	 * @param from      window start
-	 * @param to        window end
-	 * @return overlapping records ordered by start time
-	 */
+ * Status records of a machine in the given states whose window overlaps
+ * {@code [from, to]}. Used by the shift report to list manual
+ * pauses and auto stops separately.
+ *
+ * @param machineId the machine UUID
+ * @param states the operational states to include
+ * @param from window start
+ * @param to window end
+ * @return overlapping records ordered by start time
+ */
 	@Query("""
 			SELECT ms FROM MachineStatus ms
 			WHERE ms.machineId = :machineId
@@ -75,17 +90,17 @@ public interface MachineStatusRepository extends JpaRepository<MachineStatus, UU
 			@Param("to") OffsetDateTime to);
 
 	/**
-	 * Status records of the given states that overlap the window [from, to]. A
-	 * record overlaps when it starts before the window ends and is either still
-	 * open
-	 * or ends after the window starts. Used to compute downtime for OEE (RF10).
-	 *
-	 * @param machineId the machine UUID
-	 * @param states    the operational states to include (downtime states)
-	 * @param from      window start
-	 * @param to        window end
-	 * @return overlapping status records
-	 */
+ * Status records of the given states that overlap the window [from, to]. A
+ * record overlaps when it starts before the window ends and is either still
+ * open
+ * or ends after the window starts. Used to compute downtime for OEE.
+ *
+ * @param machineId the machine UUID
+ * @param states the operational states to include (downtime states)
+ * @param from window start
+ * @param to window end
+ * @return overlapping status records
+ */
 	@Query("""
 			SELECT ms FROM MachineStatus ms
 			WHERE ms.machineId = :machineId
@@ -103,17 +118,17 @@ public interface MachineStatusRepository extends JpaRepository<MachineStatus, UU
 			RecordState recordState, Collection<MachineState> states, Pageable pageable);
 
 	/**
-	 * Status records whose {@code startTime} falls in the window, scoped to a
-	 * set of machines and a set of states. Backs the Leader "Eventos recentes"
-	 * feed (EP-FE-05, mockup Dashboard_Part2_V1), where pauses and auto stops
-	 * appear when they begin and not while they remain ongoing.
-	 *
-	 * @param machineIds accessible machines for the principal (RN02-RN04)
-	 * @param states     PAUSED and/or AUTO_STOPPED for the recent-events feed
-	 * @param from       inclusive lower bound on startTime
-	 * @param to         exclusive upper bound on startTime
-	 * @return matching records ordered by startTime descending
-	 */
+ * Status records whose {@code startTime} falls in the window, scoped to a
+ * set of machines and a set of states. Backs the Leader "Eventos recentes"
+ * feed, where pauses and auto stops appear when they begin and not while
+ * they remain ongoing.
+ *
+ * @param machineIds accessible machines for the principal 
+ * @param states PAUSED and/or AUTO_STOPPED for the recent-events feed
+ * @param from inclusive lower bound on startTime
+ * @param to exclusive upper bound on startTime
+ * @return matching records ordered by startTime descending
+ */
 	List<MachineStatus> findByMachineIdInAndStateInAndStartTimeBetweenOrderByStartTimeDesc(
 			Collection<UUID> machineIds, Collection<MachineState> states,
 			OffsetDateTime from, OffsetDateTime to);

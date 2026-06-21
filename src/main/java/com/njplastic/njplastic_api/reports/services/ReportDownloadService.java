@@ -27,12 +27,12 @@ public class ReportDownloadService {
 
   private final ReportHistoryRepository historyRepository;
 
-  /**
-   * Build a downloadable resource for a stored report.
-   *
-   * @param historyId id of the row in {@code report_history}
-   * @return the row and the wrapped artifact
-   */
+ /**
+ * Build a downloadable resource for a stored report.
+ *
+ * @param historyId id of the row in {@code report_history}
+ * @return the row and the wrapped artifact
+ */
   public ResolvedArtifact resolve(UUID historyId) {
     ReportHistory history = historyRepository.findById(historyId)
         .orElseThrow(() -> new ReportArtifactNotFoundException("Report not found: " + historyId));
@@ -44,12 +44,12 @@ public class ReportDownloadService {
     return new ResolvedArtifact(history, resource);
   }
 
-  /**
-   * Pair of the metadata row and the on-disk resource ready for streaming.
-   *
-   * @param history  source row
-   * @param resource Spring resource pointing at the file
-   */
+ /**
+ * Pair of the metadata row and the on-disk resource ready for streaming.
+ *
+ * @param history source row
+ * @param resource Spring resource pointing at the file
+ */
   public record ResolvedArtifact(ReportHistory history, Resource resource) {
   }
 }

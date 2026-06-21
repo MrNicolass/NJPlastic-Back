@@ -36,7 +36,7 @@ public class ProductionCycleResponseDTO {
   @Schema(description = "Owning machine UUID", example = "9a7b6c5d-4e3f-2a1b-0c9d-8e7f6a5b4c3d", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private UUID machineId;
 
-  @Schema(description = "Pulse timestamp reconstructed by the backend (RN05)", example = "2026-05-28T14:23:55Z", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
+ @Schema(description = "Pulse timestamp reconstructed by the backend ", example = "2026-05-28T14:23:55Z", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private OffsetDateTime pulseTimestamp;
 
   @Schema(description = "Instant the pulse was received by the backend", example = "2026-05-28T14:23:55Z", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
@@ -45,10 +45,10 @@ public class ProductionCycleResponseDTO {
   @Schema(description = "Monotonic sequence per machine for gap detection", example = "42", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private Long sequence;
 
-  @Schema(description = "Interval in milliseconds since the previous confirmed cycle (RF07)", example = "2010", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
+ @Schema(description = "Interval in milliseconds since the previous confirmed cycle ", example = "2010", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
   private Integer intervalMs;
 
-  @Schema(description = "Record lifecycle state (RN07)", example = "CONFIRMED", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
+ @Schema(description = "Record lifecycle state ", example = "CONFIRMED", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private RecordState state;
 
   @Override

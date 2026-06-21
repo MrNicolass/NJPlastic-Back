@@ -53,12 +53,12 @@ public class EventResponseDTO {
   @Schema(description = "Creation timestamp", example = "2026-06-01T10:00:05Z", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private OffsetDateTime createdAt;
 
-  /**
-   * Build a response DTO from a persisted entity.
-   *
-   * @param event source entity
-   * @return populated DTO
-   */
+ /**
+ * Build a response DTO from a persisted entity.
+ *
+ * @param event source entity
+ * @return populated DTO
+ */
   public static EventResponseDTO from(ProductionEvent event) {
     return EventResponseDTO.builder()
         .id(event.getId())

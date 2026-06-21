@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Observability record for one ErpSyncScheduler execution (UC08, EP-BE-06 part
+ * Observability record for one ErpSyncScheduler execution (part
  * 2). Maps to the "erp_sync_run" table created by V6__erp_sync_run.sql.
  * Counters
  * and {@code finishedAt} are null while the row is RUNNING;

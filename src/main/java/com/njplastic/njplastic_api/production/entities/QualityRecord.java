@@ -17,12 +17,12 @@ import lombok.Setter;
 
 /**
  * Quality counts registered by a user at the end of a production order, used to
- * complete the OEE Quality factor (RF10). Maps to the "quality_record" table
+ * complete the OEE Quality factor. Maps to the "quality_record" table
  * created by V4__quality_record.sql. {@code goodCount}/{@code totalCount} yield
  * the
  * Quality ratio for the covered period; without a record the OEE is returned as
  * partial. {@code machineId}/{@code registeredBy} are plain UUIDs without
- * REFERENCES; integrity is enforced in the service layer (RFC §5.2).
+ * REFERENCES; integrity is enforced in the service layer.
  */
 @Entity
 @Table(name = "quality_record")

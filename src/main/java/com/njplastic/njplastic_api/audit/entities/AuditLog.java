@@ -19,14 +19,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Immutable audit trail entry for every HTTP request reaching the API. Maps to
- * the append-only "audit_log" table created by V1__init.sql (RF20, RN12,
- * RNF08). The table never receives UPDATE or DELETE: there is no
- * {@code @PreUpdate}
+ * Immutable audit trail entry for every HTTP request reaching the API.
+ * Maps to the append-only "audit_log" table created by V1__init.sql. The
+ * table never receives UPDATE or DELETE: there is no {@code @PreUpdate}
  * and the repository exposes no mutating operation. Message edits on
- * machine_status are recorded here as a particular case (RN12). Request and
- * response payloads are stored as sanitized JSON (passwords, tokens and secrets
- * replaced by "[REDACTED]"); user_id is null for anonymous calls.
+ * machine_status are recorded here as a particular case. Request and
+ * response payloads are stored as sanitized JSON (passwords, tokens and
+ * secrets replaced by "[REDACTED]"); user_id is null for anonymous calls.
  */
 @Entity
 @Table(name = "audit_log")

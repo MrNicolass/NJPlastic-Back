@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * KPI snapshot used by the four cards on top of the OS screen
- * (mockup OS_Part1_V1). Each counter reflects the current state of
+ * KPI snapshot used by the four cards on top of the production-order
+ * screen. Each counter reflects the current state of
  * {@code production_order_cache} after the last ERP sync window.
  */
 @Schema(description = "Production order KPI counters")

@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * Top-level connection state returned by GET /erp/sync/status (UC08). Aggregates
+ * Top-level connection state returned by GET /erp/sync/status. Aggregates
  * the runtime state of the ERP integration into one of four labels consumed by
  * the Gestor screen (Figura 26a/b). DISABLED is set when
  * {@code app.datasource.erp.enabled=false}; OPERATIONAL is the green-state

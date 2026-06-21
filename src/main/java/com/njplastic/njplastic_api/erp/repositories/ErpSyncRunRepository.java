@@ -25,13 +25,13 @@ public interface ErpSyncRunRepository extends JpaRepository<ErpSyncRun, UUID> {
 
   long countByStartedAtAfterAndStatus(OffsetDateTime threshold, ErpSyncStatus status);
 
-  /**
-   * Average duration of finished runs (any status) started after the given
-   * threshold. Returns null when there are no rows in the window.
-   *
-   * @param threshold lower bound of started_at
-   * @return average duration in milliseconds or null
-   */
+ /**
+ * Average duration of finished runs (any status) started after the given
+ * threshold. Returns null when there are no rows in the window.
+ *
+ * @param threshold lower bound of started_at
+ * @return average duration in milliseconds or null
+ */
   @Query("""
       SELECT AVG(r.durationMs) FROM ErpSyncRun r
       WHERE r.startedAt > :threshold

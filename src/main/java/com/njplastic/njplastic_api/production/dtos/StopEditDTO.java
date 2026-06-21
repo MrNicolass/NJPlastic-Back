@@ -15,13 +15,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Single entry of the edition history of an AUTO_STOPPED message (UC12,
- * RF18, RF19, RN12). Reconstructed from the append-only {@code audit_log}
- * table, so no new persistence is needed: every edition flowed through
+ * Single entry of the edition history of an AUTO_STOPPED message.
+ * Reconstructed from the append-only {@code audit_log} table, so no new
+ * persistence is needed: every edition flowed through
  * {@code PUT /machines/{id}/stops/{stopId}/message} and was captured by
- * the global {@code AuditFilter}. Used by {@code GET
- * /machines/{id}/stops/{stopId}/edits} to back the "Histórico de edições"
- * block of the Modal_Change_Stop mockups (Líder/Gestor variants).
+ * the global {@code AuditFilter}. Used by
+ * {@code GET /machines/{id}/stops/{stopId}/edits} to back the
+ * "Historico de edicoes" block of the stop-message edit modal.
  */
 @Schema(description = "Edition entry of an AUTO_STOPPED message, derived from audit_log")
 @Getter

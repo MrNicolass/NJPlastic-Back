@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Aggregates the per-machine sections of the consolidated shift report
- * (RF15). Owns no repository - reads every aggregate through its service
+ *. Owns no repository - reads every aggregate through its service
  * and assembles the response. The optional {@code sector} parameter
  * narrows the report below the principal scope; the {@code shift} value
  * is carried in the response for the dashboard label but not used as a
@@ -35,16 +35,16 @@ public class ReportService {
   private final OeeService oeeService;
   private final ProductionDtoMapper mapper;
 
-  /**
-   * Build the consolidated shift report for the window.
-   *
-   * @param from      window start
-   * @param to        window end
-   * @param sector    optional sector filter applied on top of the principal scope
-   * @param shift     shift label echoed in the response (informational)
-   * @param principal the authenticated user
-   * @return the report
-   */
+ /**
+ * Build the consolidated shift report for the window.
+ *
+ * @param from window start
+ * @param to window end
+ * @param sector optional sector filter applied on top of the principal scope
+ * @param shift shift label echoed in the response (informational)
+ * @param principal the authenticated user
+ * @return the report
+ */
   public ShiftReportResponseDTO buildShiftReport(OffsetDateTime from, OffsetDateTime to,
       String sector, String shift, AuthenticatedUser principal) {
     List<Machine> visible = machineService.findAccessible(principal);

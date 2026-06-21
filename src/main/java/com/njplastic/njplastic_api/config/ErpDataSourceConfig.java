@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * RNF13: ERP access uses native JDBC (no JPA), vendor-agnostic so the same
+ * : ERP access uses native JDBC (no JPA), vendor-agnostic so the same
  * configuration works against SQL Server, Oracle or PostgreSQL ERP backends.
  * The bean is only created when app.datasource.erp.enabled=true so the
  * application can boot in dev/CI environments without a real ERP database.

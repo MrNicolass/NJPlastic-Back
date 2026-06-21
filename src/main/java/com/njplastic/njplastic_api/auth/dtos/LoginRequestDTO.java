@@ -15,7 +15,7 @@ import lombok.Setter;
 /**
  * Credentials submitted to {@code POST /auth/login}. The 12-character minimum
  * on the password is enforced both here (input-side) and at user creation
- * time, aligned with RFC §6.2.
+ * time.
  */
 @Schema(description = "Credentials payload for authentication")
 @Getter

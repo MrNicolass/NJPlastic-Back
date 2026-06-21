@@ -44,7 +44,7 @@ public class ReportRetentionJob {
         Files.deleteIfExists(Path.of(row.getPath()));
         deletedFiles++;
       } catch (NoSuchFileException ignored) {
-        // already gone - tolerate
+ // already gone - tolerate
       } catch (IOException ex) {
         LOGGER.warn("Failed to delete report file [{}]: {}", row.getPath(), ex.getMessage());
       }

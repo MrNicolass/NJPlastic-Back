@@ -20,7 +20,7 @@ import lombok.Setter;
 /**
  * Detailed projection of a {@link Machine}. Used by {@code GET /machines/{id}}
  * and by the response of {@code POST}/{@code PUT}, carrying every operational
- * parameter that the Manager screen shows (mockup Machine_Register_Modal_*).
+ * parameter that the Manager registration screen exposes.
  */
 @Schema(description = "Full machine projection with detection parameters")
 @Getter
@@ -42,13 +42,13 @@ public class MachineDetailResponseDTO {
   @Schema(description = "Sector the machine belongs to", example = "INJECAO", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY, nullable = true)
   private String sector;
 
-  @Schema(description = "Standard cycle time in milliseconds (RN06)", example = "2000", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
+ @Schema(description = "Standard cycle time in milliseconds ", example = "2000", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private Integer standardCycleMs;
 
-  @Schema(description = "Tolerance factor applied over the standard cycle for pause detection (RN06)", example = "1.50", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
+ @Schema(description = "Tolerance factor applied over the standard cycle for pause detection ", example = "1.50", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private BigDecimal toleranceFactor;
 
-  @Schema(description = "Consecutive pauses required to escalate to AUTO_STOPPED (RN09, RF17)", example = "3", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
+ @Schema(description = "Consecutive pauses required to escalate to AUTO_STOPPED ", example = "3", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private Integer consecutivePausesToStop;
 
   @Schema(description = "Window in milliseconds without pulses before the watchdog marks the machine OFFLINE", example = "60000", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
@@ -63,10 +63,10 @@ public class MachineDetailResponseDTO {
   @Schema(description = "Last update timestamp", example = "2026-05-28T08:30:00Z", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private OffsetDateTime updatedAt;
 
-  /**
-   * @param machine source entity
-   * @return populated DTO
-   */
+ /**
+ * @param machine source entity
+ * @return populated DTO
+ */
   public static MachineDetailResponseDTO from(Machine machine) {
     return MachineDetailResponseDTO.builder()
         .id(machine.getId())

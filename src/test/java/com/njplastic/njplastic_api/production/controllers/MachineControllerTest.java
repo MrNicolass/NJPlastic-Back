@@ -48,12 +48,14 @@ import com.njplastic.njplastic_api.production.enums.MachineState;
 import com.njplastic.njplastic_api.production.exceptions.PauseAlreadyClassifiedException;
 import com.njplastic.njplastic_api.production.exceptions.StopMessageNotEditableException;
 import com.njplastic.njplastic_api.production.exceptions.UnknownMachineException;
+import com.njplastic.njplastic_api.auth.services.UserService;
 import com.njplastic.njplastic_api.production.services.MachineService;
 import com.njplastic.njplastic_api.production.services.MachineStatusService;
 import com.njplastic.njplastic_api.production.services.OeeService;
 import com.njplastic.njplastic_api.production.services.ProductionDtoMapper;
 import com.njplastic.njplastic_api.production.services.ProductionService;
 import com.njplastic.njplastic_api.production.services.QualityService;
+import com.njplastic.njplastic_api.production.services.ShiftResolver;
 
 @WebMvcTest(MachineController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -78,6 +80,12 @@ class MachineControllerTest {
 
   @MockitoBean
   private QualityService qualityService;
+
+  @MockitoBean
+  private UserService userService;
+
+  @MockitoBean
+  private ShiftResolver shiftResolver;
 
   @MockitoBean
   private ProductionDtoMapper mapper;
@@ -124,6 +132,7 @@ class MachineControllerTest {
     when(machineStatusService.findWindow(MACHINE_ID, from, to)).thenReturn(List.of(open));
     when(mapper.toStatusEntries(List.of(open))).thenReturn(List.of(entry));
     when(mapper.toStatusEntry(open)).thenReturn(entry);
+    when(productionService.countConfirmedCycles(MACHINE_ID, from, to)).thenReturn(420L);
 
     mockMvc.perform(get("/machines/{id}/status", MACHINE_ID)
             .param("from", "2026-05-28T06:00:00Z")
@@ -131,7 +140,8 @@ class MachineControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.machineId").value(MACHINE_ID.toString()))
         .andExpect(jsonPath("$.currentState").value("RUNNING"))
-        .andExpect(jsonPath("$.timeline.length()").value(1));
+        .andExpect(jsonPath("$.timeline.length()").value(1))
+        .andExpect(jsonPath("$.cyclesInWindow").value(420));
   }
 
   @Test

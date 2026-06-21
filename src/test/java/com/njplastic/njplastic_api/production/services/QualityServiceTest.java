@@ -67,13 +67,13 @@ class QualityServiceTest {
   }
 
   @Test
-  void findForPeriod_delegatesToRepository() {
+  void findForPeriod_delegatesToOverlapFinder() {
     UUID machineId = UUID.randomUUID();
     OffsetDateTime from = OffsetDateTime.parse("2026-05-28T06:00:00Z");
     OffsetDateTime to = OffsetDateTime.parse("2026-05-28T14:00:00Z");
     QualityRecord record = QualityRecord.builder().id(UUID.randomUUID()).build();
     when(qualityRecordRepository
-        .findByMachineIdAndPeriodStartGreaterThanEqualAndPeriodEndLessThanEqual(machineId, from, to))
+        .findByMachineIdAndPeriodStartLessThanAndPeriodEndGreaterThan(machineId, to, from))
         .thenReturn(List.of(record));
 
     assertThat(qualityService.findForPeriod(machineId, from, to)).containsExactly(record);

@@ -7,13 +7,13 @@ import java.util.UUID;
  * Minimal projection of a local production_cycle that is about to be written to
  * the ERP via the configurable {@code app.datasource.erp.query.insert-cycle}
  * statement. The local UUID is the idempotency key in the ERP - retries after
- * a failed write must not duplicate apontamentos (RN08). Not an API contract.
+ * a failed write must not duplicate apontamentos. Not an API contract.
  *
- * @param id             local production_cycle UUID, used as idempotency key
- * @param machineCode    machine code the cycle belongs to
- * @param pulseTimestamp reconstructed pulse timestamp (RN05)
- * @param sequence       monotonic sequence per machine
- * @param intervalMs     milliseconds since the previous confirmed cycle (RF07)
+ * @param id local production_cycle UUID, used as idempotency key
+ * @param machineCode machine code the cycle belongs to
+ * @param pulseTimestamp reconstructed pulse timestamp 
+ * @param sequence monotonic sequence per machine
+ * @param intervalMs milliseconds since the previous confirmed cycle 
  */
 public record ProductionCycleRow(
     UUID id,

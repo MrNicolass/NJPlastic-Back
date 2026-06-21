@@ -8,7 +8,7 @@ import com.njplastic.njplastic_api.auth.security.IssuedToken;
  * JSON payload returned to the client plus the freshly issued token. The
  * controller needs both - the DTO becomes the response body and the
  * {@link IssuedToken} drives the {@code access_token}/{@code access_token_exp}
- * cookies emitted in parallel (EP-FE-02 pre-req).
+ * cookies emitted in parallel (pre-req).
  */
 public record AuthenticationResult(LoginResponseDTO response, IssuedToken issued) {
 }

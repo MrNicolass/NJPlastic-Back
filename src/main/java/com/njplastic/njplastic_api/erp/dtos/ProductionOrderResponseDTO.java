@@ -19,7 +19,7 @@ import lombok.Setter;
 /**
  * Read-side projection of a {@link ProductionOrderCache} row. Carries the
  * fields the frontend needs to render the production-order list and detail
- * screens (mockup OS_Part1/2_V1) without exposing the raw JSON payload mirror.
+ * screens without exposing the raw JSON payload mirror.
  */
 @Schema(description = "Production order cache projection")
 @Getter
@@ -50,10 +50,10 @@ public class ProductionOrderResponseDTO {
   @Schema(description = "Instant the cache row was last refreshed by the sync", example = "2026-05-28T14:00:00Z", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private OffsetDateTime lastSyncAt;
 
-  /**
-   * @param entity source cache row
-   * @return populated DTO
-   */
+ /**
+ * @param entity source cache row
+ * @return populated DTO
+ */
   public static ProductionOrderResponseDTO from(ProductionOrderCache entity) {
     return ProductionOrderResponseDTO.builder()
         .id(entity.getId())

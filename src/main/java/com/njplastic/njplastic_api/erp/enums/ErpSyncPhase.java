@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * Phases of one {@code ErpSyncService.runSync()} execution. Used to label the
+ * Phases of one {@code ErpSyncService.runSync} execution. Used to label the
  * prefix of error messages persisted in {@code erp_sync_run.error_message} so
  * the Gestor screen can tell which phase aborted the run. REFRESH_ORDERS reads
  * open orders from the ERP and rewrites {@code production_order_cache};

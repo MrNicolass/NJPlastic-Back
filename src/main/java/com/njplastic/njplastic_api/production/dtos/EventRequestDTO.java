@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Request payload for {@code POST /events} (EP-BE-05 reopened). The author
+ * Request payload for {@code POST /events} (reopened). The author
  * UUID is taken from the JWT, never from the payload.
  */
 @Schema(description = "Manual production event request payload")

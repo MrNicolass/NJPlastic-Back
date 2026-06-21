@@ -19,8 +19,7 @@ import lombok.Setter;
 
 /**
  * Admin-side projection of a {@link User}. Carries every field the Manager
- * needs in the {@code Users_Part1/2_V1} mockup screens, but never the
- * password hash.
+ * user-administration screens need, but never the password hash.
  */
 @Schema(description = "Admin projection of a user (no password hash)")
 @Getter
@@ -60,12 +59,12 @@ public class UserResponseDTO {
   @Schema(description = "Last update timestamp", example = "2026-05-28T08:30:00Z", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private OffsetDateTime updatedAt;
 
-  /**
-   * Build a response DTO from a persisted entity.
-   *
-   * @param user source entity
-   * @return populated DTO
-   */
+ /**
+ * Build a response DTO from a persisted entity.
+ *
+ * @param user source entity
+ * @return populated DTO
+ */
   public static UserResponseDTO from(User user) {
     return UserResponseDTO.builder()
         .id(user.getId())

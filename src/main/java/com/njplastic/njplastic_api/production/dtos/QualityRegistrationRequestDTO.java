@@ -18,8 +18,8 @@ import lombok.Setter;
 
 /**
  * Request payload used by a user to register quality counts at the end of a
- * production order, completing the OEE Quality factor (RF10). The REST endpoint
- * that consumes it is delivered in EP-BE-05; this DTO and the persistence are
+ * production order, completing the OEE Quality factor. The REST endpoint
+ * that consumes it is delivered in; this DTO and the persistence are
  * provided here so OEE can already use the data.
  */
 @Schema(description = "Quality counts registered at the end of a production order")

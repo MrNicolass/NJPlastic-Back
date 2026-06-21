@@ -49,6 +49,9 @@ public class MachineStatusResponseDTO {
   @Schema(description = "Status records overlapping the window ordered by start time", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private List<MachineStatusEntryDTO> timeline;
 
+  @Schema(description = "Confirmed cycle count of the machine within [from, to]; powers the shift-cycle counter on dashboard cards", example = "412", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
+  private long cyclesInWindow;
+
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
@@ -58,6 +61,7 @@ public class MachineStatusResponseDTO {
         .append(", from=").append(from)
         .append(", to=").append(to)
         .append(", timelineSize=").append(timeline == null ? 0 : timeline.size())
+        .append(", cyclesInWindow=").append(cyclesInWindow)
         .append('}');
     return sb.toString();
   }

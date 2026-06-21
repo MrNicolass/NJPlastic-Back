@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Manual production event (EP-BE-05 reopened, RFC §7.3.1). Persists context that
+ * Manual production event (reopened). Persists context that
  * is not a cycle nor a pause - training, cleaning, meetings - so the operator
  * dashboard can present an event timeline and OEE reports can subtract these
  * windows when relevant. Maps to {@code production_event} from V8.

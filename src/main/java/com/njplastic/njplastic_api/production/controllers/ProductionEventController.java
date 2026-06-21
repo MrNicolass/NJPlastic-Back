@@ -1,7 +1,6 @@
 package com.njplastic.njplastic_api.production.controllers;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -29,7 +28,6 @@ import com.njplastic.njplastic_api.production.services.MachineService;
 import com.njplastic.njplastic_api.production.services.ProductionEventService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -39,14 +37,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Manual production event endpoint (EP-BE-05 reopened, RFC §7.3.1). Backs the
- * "Registrar evento manual" action on the Leader/Manager dashboard
- * (mockup Dashboard_Part1_V1) and feeds the "Eventos recentes" panel on the
- * consolidated dashboard. Reads are scoped by sector via
- * {@link MachineService#requireAccessible} (RN02-RN04).
+ * Manual production event endpoint. Backs the "Registrar evento manual" action
+ * on the consolidated Leader/Manager dashboard and feeds the "Eventos recentes"
+ * panel. Reads are scoped by sector via {@link MachineService#requireAccessible}.
  */
 @RestController
-@Tag(name = "Production Events", description = "Manual production events - training, cleaning, meetings (EP-BE-05 reopened / RFC §7.3.1)")
+@Tag(name = "Production Events", description = "Manual production events - training, cleaning, meetings")
 @RequiredArgsConstructor
 public class ProductionEventController {
 
@@ -56,7 +52,7 @@ public class ProductionEventController {
   @PostMapping("/events")
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize("hasAnyRole('LEADER','MANAGER')")
-  @Operation(summary = "Register a manual production event", description = "Author is taken from the JWT. The target machine must be visible to the principal (RN02-RN04).")
+  @Operation(summary = "Register a manual production event", description = "Author is taken from the JWT. The target machine must be visible to the principal.")
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Event persisted", content = @Content(schema = @Schema(implementation = EventResponseDTO.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request payload", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
@@ -99,27 +95,26 @@ public class ProductionEventController {
 
   @GetMapping("/events/recent")
   @PreAuthorize("hasAnyRole('LEADER','MANAGER')")
-  @Operation(summary = "Aggregated 'Eventos recentes' feed for the Leader dashboard",
-      description = "Merges manual events, manual pauses, auto stops and stop-message edits across the accessible machines (RN02-RN04). Defaults to the last 4 hours when from/to are omitted; results are ordered by timestamp DESC and capped at limit. Backs the right column of mockup Dashboard_Part2_V1 (EP-FE-05).")
+  @Operation(summary = "Aggregated 'Eventos recentes' feed for the consolidated dashboard",
+      description = "Merges manual events, manual pauses, auto stops and stop-message edits across the accessible machines. Defaults to the last 4 hours when from/to are omitted; results are ordered by timestamp DESC and paginated server-side.")
   @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Aggregated feed entries",
-          content = @Content(array = @ArraySchema(schema = @Schema(implementation = RecentEventDTO.class)))),
-      @ApiResponse(responseCode = "400", description = "Invalid limit or window parameters",
+      @ApiResponse(responseCode = "200", description = "Page of aggregated feed entries",
+          content = @Content(schema = @Schema(implementation = Page.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid window or pagination parameters",
           content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
       @ApiResponse(responseCode = "401", description = "Missing or invalid JWT",
           content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
       @ApiResponse(responseCode = "403", description = "Caller role is not allowed on this endpoint",
           content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   })
-  public List<RecentEventDTO> getRecent(
-      @RequestParam(defaultValue = "50") int limit,
+  public Page<RecentEventDTO> getRecent(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime from,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime to,
+      @PageableDefault(size = 6) Pageable pageable,
       @AuthenticationPrincipal AuthenticatedUser principal) {
-    int safeLimit = Math.max(1, Math.min(200, limit));
     OffsetDateTime now = OffsetDateTime.now();
     OffsetDateTime resolvedTo = to != null ? to : now;
     OffsetDateTime resolvedFrom = from != null ? from : resolvedTo.minusHours(4);
-    return eventService.findRecent(principal, safeLimit, resolvedFrom, resolvedTo);
+    return eventService.findRecent(principal, pageable, resolvedFrom, resolvedTo);
   }
 }

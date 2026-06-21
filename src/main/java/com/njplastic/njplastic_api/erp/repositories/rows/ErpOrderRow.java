@@ -7,12 +7,12 @@ package com.njplastic.njplastic_api.erp.repositories.rows;
  * product_code, target_quantity, status, payload_json. Not an API contract; the
  * sync service writes one row of {@code production_order_cache} per record.
  *
- * @param erpOrderId     external order identifier (PK in the ERP)
- * @param machineCode    machine code the order is bound to (may be null)
- * @param productCode    SKU produced by the order
+ * @param erpOrderId external order identifier (PK in the ERP)
+ * @param machineCode machine code the order is bound to (may be null)
+ * @param productCode SKU produced by the order
  * @param targetQuantity planned production quantity
- * @param status         ERP-side status string (typically OPEN)
- * @param payloadJson    free-form JSON document with extra fields
+ * @param status ERP-side status string (typically OPEN)
+ * @param payloadJson free-form JSON document with extra fields
  */
 public record ErpOrderRow(
     String erpOrderId,

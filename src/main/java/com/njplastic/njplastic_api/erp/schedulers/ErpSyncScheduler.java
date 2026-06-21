@@ -11,8 +11,8 @@ import com.njplastic.njplastic_api.erp.services.ErpSyncService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Periodically triggers {@link ErpSyncService#runSync()} on the configured
- * window (RF14, RNF03). Created only when
+ * Periodically triggers {@link ErpSyncService#runSync} on the configured
+ * window. Created only when
  * {@code app.datasource.erp.enabled=true}; {@code @EnableScheduling} is
  * already active through {@code MqttConfig}. Failures inside the sync flow
  * are translated into ErpSyncRun rows by the service - the catch here is a

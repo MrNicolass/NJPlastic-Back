@@ -6,13 +6,13 @@ import java.util.Optional;
 /**
  * Operational state of an injection machine, persisted in machine_status.state
  * (PostgreSQL TYPE machine_state). RUNNING and PAUSED describe normal operation
- * with isolated pauses (RN06); AUTO_STOPPED is reached after N consecutive
+ * with isolated pauses; AUTO_STOPPED is reached after N consecutive
  * pauses
- * (RN09, RF17); OFFLINE is produced by the watchdog when no pulse arrives
+ *; OFFLINE is produced by the watchdog when no pulse arrives
  * within
  * the configured window. Values must match the CREATE TYPE in V1__init.sql,
  * since
- * Hibernate serializes by name().
+ * Hibernate serializes by name.
  */
 public enum MachineState {
 

@@ -4,13 +4,13 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * Authorization profile (RFC §2.5 - RN01..RN04 / RFC §6.2). Mapped to the
+ * Authorization profile. Mapped to the
  * PostgreSQL ENUM type {@code user_role} declared in V1__init.sql.
  *
  * <p>
  * Follows the project-wide enum convention: each constant carries a
- * {@code description} equal to its {@link #name()}, exposed via
- * {@link #getDescription()}, with {@link #findByDescription(String)} as the
+ * {@code description} equal to its {@link #name}, exposed via
+ * {@link #getDescription}, with {@link #findByDescription(String)} as the
  * canonical lookup from a string payload.
  */
 public enum UserRole {
@@ -29,12 +29,12 @@ public enum UserRole {
     return description;
   }
 
-  /**
-   * Find a {@link UserRole} by its description, case-insensitive.
-   *
-   * @param description the description to match against
-   * @return the matching role, or empty if none matches
-   */
+ /**
+ * Find a {@link UserRole} by its description, case-insensitive.
+ *
+ * @param description the description to match against
+ * @return the matching role, or empty if none matches
+ */
   public static Optional<UserRole> findByDescription(String description) {
     if (description == null) {
       return Optional.empty();

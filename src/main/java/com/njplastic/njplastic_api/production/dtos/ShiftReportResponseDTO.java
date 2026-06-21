@@ -15,13 +15,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Consolidated shift report (RF15). Aggregates, for every machine in the
+ * Consolidated shift report. Aggregates, for every machine in the
  * caller scope, the OEE result for the window plus the list of manual
  * pauses and auto stops with their messages and authors. CSV/PDF export
- * is delivered separately by RF16/EP-FE-07; this endpoint returns JSON
+ * is delivered separately by /; this endpoint returns JSON
  * only.
  */
-@Schema(description = "Consolidated shift report for a sector/shift window (RF15)")
+@Schema(description = "Consolidated shift report for a sector/shift window ")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -56,10 +56,10 @@ public class ShiftReportResponseDTO {
     return sb.toString();
   }
 
-  /**
-   * Per-machine section of the shift report: identification, totals, OEE
-   * for the window and the lists of manual pauses and auto stops.
-   */
+ /**
+ * Per-machine section of the shift report: identification, totals, OEE
+ * for the window and the lists of manual pauses and auto stops.
+ */
   @Schema(description = "Per-machine section of the shift report")
   @Getter
   @Setter
@@ -74,13 +74,13 @@ public class ShiftReportResponseDTO {
     @Schema(description = "Number of confirmed cycles in the window", example = "1280", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
     private long confirmedCycles;
 
-    @Schema(description = "OEE result for the window (RF10)", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
+ @Schema(description = "OEE result for the window ", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
     private OeeResultDTO oee;
 
     @Schema(description = "Manual pauses classified by users (type=PAUSED)", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
     private List<MachineStatusEntryDTO> manualPauses;
 
-    @Schema(description = "Auto stops detected by the system (type=AUTO_STOPPED) with current message and author (RF20)", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
+ @Schema(description = "Auto stops detected by the system (type=AUTO_STOPPED) with current message and author ", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
     private List<MachineStatusEntryDTO> autoStops;
 
     @Override

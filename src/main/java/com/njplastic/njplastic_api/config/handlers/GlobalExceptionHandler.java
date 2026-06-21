@@ -21,16 +21,16 @@ public class GlobalExceptionHandler {
 
   private final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-  /**
-   * Handles all exceptions that extend BaseApiException.
-   * This method captures the exception, logs it, and returns a standardized error
-   * response.
-   *
-   * @param request the HttpServletRequest object
-   * @param ex      the BaseApiException that was thrown
-   * @return a ResponseEntity containing the ErrorResponseDTO with appropriate
-   *         HTTP status
-   */
+ /**
+ * Handles all exceptions that extend BaseApiException.
+ * This method captures the exception, logs it, and returns a standardized error
+ * response.
+ *
+ * @param request the HttpServletRequest object
+ * @param ex the BaseApiException that was thrown
+ * @return a ResponseEntity containing the ErrorResponseDTO with appropriate
+ * HTTP status
+ */
   @ExceptionHandler(BaseApiException.class)
   public ResponseEntity<ErrorResponseDTO> handleBaseApiBadRequestExceptions(
       HttpServletRequest request, BaseApiException ex) {
@@ -46,17 +46,17 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(errorResponseDTO.build(), ex.getStatus());
   }
 
-  /**
-   * Handles MissingServletRequestParameterException, which occurs when a required
-   * request parameter is missing.
-   * Logs the exception and returns a standardized error response with HTTP status
-   * 400 Bad Request.
-   *
-   * @param request the HttpServletRequest object
-   * @param ex      the MissingServletRequestParameterException that was thrown
-   * @return a ResponseEntity containing the ErrorResponseDTO with HTTP status 400
-   *         Bad Request
-   */
+ /**
+ * Handles MissingServletRequestParameterException, which occurs when a required
+ * request parameter is missing.
+ * Logs the exception and returns a standardized error response with HTTP status
+ * 400 Bad Request.
+ *
+ * @param request the HttpServletRequest object
+ * @param ex the MissingServletRequestParameterException that was thrown
+ * @return a ResponseEntity containing the ErrorResponseDTO with HTTP status 400
+ * Bad Request
+ */
   @ExceptionHandler(MissingServletRequestParameterException.class)
   public ResponseEntity<ErrorResponseDTO> handleMissingServletRequestParameterException(
       HttpServletRequest request, MissingServletRequestParameterException ex) {
@@ -70,17 +70,17 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(ErrorResponseDTOBuilder.build(), HttpStatus.BAD_REQUEST);
   }
 
-  /**
-   * Handles MethodArgumentNotValidException, which occurs when a method argument
-   * fails validation.
-   * Logs the exception and returns a standardized error response with HTTP status
-   * 400 Bad Request.
-   *
-   * @param request the HttpServletRequest object
-   * @param ex      the MethodArgumentNotValidException that was thrown
-   * @return a ResponseEntity containing the ErrorResponseDTO with HTTP status 400
-   *         Bad Request
-   */
+ /**
+ * Handles MethodArgumentNotValidException, which occurs when a method argument
+ * fails validation.
+ * Logs the exception and returns a standardized error response with HTTP status
+ * 400 Bad Request.
+ *
+ * @param request the HttpServletRequest object
+ * @param ex the MethodArgumentNotValidException that was thrown
+ * @return a ResponseEntity containing the ErrorResponseDTO with HTTP status 400
+ * Bad Request
+ */
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponseDTO> handleMethodArgumentNotValidException(
       HttpServletRequest request, MethodArgumentNotValidException ex) {
@@ -99,17 +99,17 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(ErrorResponseDTOBuilder.build(), HttpStatus.BAD_REQUEST);
   }
 
-  /**
-   * Handles HttpMessageNotReadableException, which occurs when the request body
-   * cannot be read.
-   * Logs the exception and returns a standardized error response with HTTP status
-   * 422 Unprocessable Entity.
-   *
-   * @param request the HttpServletRequest object
-   * @param ex      the HttpMessageNotReadableException that was thrown
-   * @return a ResponseEntity containing the ErrorResponseDTO with HTTP status 422
-   *         Unprocessable Entity
-   */
+ /**
+ * Handles HttpMessageNotReadableException, which occurs when the request body
+ * cannot be read.
+ * Logs the exception and returns a standardized error response with HTTP status
+ * 422 Unprocessable Entity.
+ *
+ * @param request the HttpServletRequest object
+ * @param ex the HttpMessageNotReadableException that was thrown
+ * @return a ResponseEntity containing the ErrorResponseDTO with HTTP status 422
+ * Unprocessable Entity
+ */
   @ExceptionHandler(HttpMessageNotReadableException.class)
   public ResponseEntity<ErrorResponseDTO> handleHttpMessageNotReadableException(
       HttpServletRequest request, HttpMessageNotReadableException ex) {

@@ -53,10 +53,10 @@ public class ErpFieldMappingDTO {
   @Schema(description = "Last update timestamp", example = "2026-06-01T08:30:00Z", requiredMode = REQUIRED, accessMode = READ_ONLY, nullable = false)
   private OffsetDateTime updatedAt;
 
-  /**
-   * @param entity source entity
-   * @return populated DTO
-   */
+ /**
+ * @param entity source entity
+ * @return populated DTO
+ */
   public static ErpFieldMappingDTO from(ErpFieldMapping entity) {
     return ErpFieldMappingDTO.builder()
         .id(entity.getId())

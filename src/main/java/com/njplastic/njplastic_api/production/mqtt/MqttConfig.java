@@ -18,7 +18,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * connection
  * and subscription lifecycle is managed by {@link MqttSubscriber} so a broker
  * that
- * is down at startup does not crash the application (RFC §5.3).
+ * is down at startup does not crash the application.
  */
 @Configuration
 @EnableScheduling

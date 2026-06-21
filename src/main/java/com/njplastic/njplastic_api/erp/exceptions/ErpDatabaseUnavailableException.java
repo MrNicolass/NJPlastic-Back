@@ -10,7 +10,7 @@ import com.njplastic.njplastic_api.config.exceptions.BaseApiInternalServerErrorE
  * via {@link BaseApiInternalServerErrorException}. The ERP sync flow runs
  * outside the GlobalExceptionHandler scope (MQTT/@Scheduled context), so the
  * scheduler also catches this exception to register the failure in
- * {@code erp_sync_run} without crashing the JVM (RN08).
+ * {@code erp_sync_run} without crashing the JVM.
  */
 public class ErpDatabaseUnavailableException extends BaseApiInternalServerErrorException {
 

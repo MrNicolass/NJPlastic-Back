@@ -23,8 +23,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * Validates the JWT on every request and populates SecurityContextHolder. The
  * token is read from "Authorization: Bearer <token>" first, falling back to
- * the {@code access_token} httpOnly cookie emitted by /auth/login (EP-FE-02
- * dual-cookie contract). Anonymous routes (login, swagger, versioning) are
+ * the {@code access_token} httpOnly cookie emitted by /auth/login (* dual-cookie contract). Anonymous routes (login, swagger, versioning) are
  * filtered through unchanged - access is decided by SecurityConfig's
  * authorizeHttpRequests.
  */
